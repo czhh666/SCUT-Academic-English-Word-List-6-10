@@ -1,0 +1,3241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学术英语词汇背题程序 - 多题库支持</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --correct-color: #4caf50;
+            --wrong-color: #f44336;
+            --highlight-color: #ffeb3b;
+            --bg-color: #f5f7fa;
+            --card-color: #ffffff;
+            --text-color: #333333;
+            --source6-color: #4caf50;
+            --source7-color: #2196f3;
+            --source8-color: #9c27b0;
+            --source9-color: #ff9800;
+            --source10-color: #795548;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
+        }
+        
+        .main-content {
+            flex: 1;
+        }
+        
+        .sidebar {
+            width: 200px;
+            background-color: var(--card-color);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card {
+            background-color: var(--card-color);
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1, h2, h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+        
+        button, .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        button:hover, .btn:hover {
+            background-color: #3a5a8f;
+        }
+        
+        .option {
+            display: block;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            position: relative;
+        }
+        
+        .option:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .correct {
+            background-color: var(--correct-color);
+            color: white;
+        }
+        
+        .wrong {
+            background-color: var(--wrong-color);
+            color: white;
+        }
+        
+        .question-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 15px;
+        }
+        
+        .question-number {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .question-number:hover {
+            background-color: #d0d0d0;
+        }
+        
+        .current-question {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .answered {
+            background-color: #b3e0ff;
+        }
+        
+        .wrong-answered {
+            background-color: #ffb3b3;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 5px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .wrong-questions-list {
+            margin-top: 20px;
+        }
+        
+        .wrong-question-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #fff9f9;
+            border-left: 4px solid var(--wrong-color);
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .checkbox-container {
+            margin-top: 10px;
+        }
+        
+        .action-buttons {
+            margin-top: 20px;
+        }
+        
+        input[type="number"] {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            width: 60px;
+        }
+        
+        .select-group {
+            margin-bottom: 15px;
+        }
+        
+        .select-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            width: 100%;
+            background-color: white;
+        }
+        
+        .preset-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .preset-buttons button {
+            flex: 1;
+        }
+        
+        /* 优化中文释义样式 */
+        .translation {
+            display: block;
+            color: #333;
+            font-size: 1.1em;
+            margin-top: 8px;
+            padding: 5px;
+            background-color: rgba(255, 255, 255, 0.4);
+            border-radius: 4px;
+            font-weight: 500;
+            text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+        }
+        
+        .option-content {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .feature-highlight {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            display: inline-block;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--primary-color);
+            border-radius: 0 5px 5px 0;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        .explanation-title {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo-text {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.2em;
+        }
+        
+        .corner-badge {
+            background-color: #ff5252;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        
+        .source-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: white;
+            font-size: 0.8em;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .source6 { background-color: var(--source6-color); }
+        .source7 { background-color: var(--source7-color); }
+        .source8 { background-color: var(--source8-color); }
+        .source9 { background-color: var(--source9-color); }
+        .source10 { background-color: var(--source10-color); }
+        
+        .source-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .source-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            font-weight: bold;
+            min-width: 80px;
+        }
+        
+        .source-btn:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .source-btn.selected {
+            border-color: var(--primary-color);
+            background-color: rgba(74, 111, 165, 0.1);
+        }
+        
+        .source6-btn.selected { border-color: var(--source6-color); background-color: rgba(76, 175, 80, 0.1); }
+        .source7-btn.selected { border-color: var(--source7-color); background-color: rgba(33, 150, 243, 0.1); }
+        .source8-btn.selected { border-color: var(--source8-color); background-color: rgba(156, 39, 176, 0.1); }
+        .source9-btn.selected { border-color: var(--source9-color); background-color: rgba(255, 152, 0, 0.1); }
+        .source10-btn.selected { border-color: var(--source10-color); background-color: rgba(121, 85, 72, 0.1); }
+        
+        .mode-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .mode-option {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .mode-option.selected {
+            border-color: var(--primary-color);
+            background-color: rgba(74, 111, 165, 0.1);
+        }
+        
+        .mode-option:hover {
+            background-color: rgba(74, 111, 165, 0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="corner-badge">多题库支持版</div>
+    
+    <div class="container">
+        <div class="main-content">
+            <!-- 主页 -->
+            <div id="home-page" class="card">
+                <div class="header">
+                    <div class="logo">
+                        <div class="logo-text">学术英语词汇背题程序</div>
+                    </div>
+                </div>
+                
+                <div class="feature-highlight">支持多个题库：子表6-10</div>
+                
+                <h3>选择题目来源：</h3>
+                <div class="source-selector">
+                    <div class="source-btn source6-btn" data-source="all" onclick="selectSource('all')">全部题库</div>
+                    <div class="source-btn source6-btn" data-source="6" onclick="selectSource('6')">子表6</div>
+                    <div class="source-btn source7-btn" data-source="7" onclick="selectSource('7')">子表7</div>
+                    <div class="source-btn source8-btn" data-source="8" onclick="selectSource('8')">子表8</div>
+                    <div class="source-btn source9-btn" data-source="9" onclick="selectSource('9')">子表9</div>
+                    <div class="source-btn source10-btn" data-source="10" onclick="selectSource('10')">子表10</div>
+                </div>
+                
+                <h3>选择练习模式：</h3>
+                <div class="mode-selector">
+                    <div class="mode-option selected" data-mode="random" onclick="selectMode('random')">
+                        <div>随机抽题</div>
+                        <small>随机抽取题目练习</small>
+                    </div>
+                    <div class="mode-option" data-mode="sequential" onclick="selectMode('sequential')">
+                        <div>顺序做题</div>
+                        <small>按题目顺序练习</small>
+                    </div>
+                </div>
+                
+                <div class="select-group">
+                    <label for="question-count">选择每组题目数量：</label>
+                    <input type="number" id="question-count" min="1" max="100" value="10">
+                    <div class="preset-buttons">
+                        <button onclick="setQuestionCount(10)">10题</button>
+                        <button onclick="setQuestionCount(20)">20题</button>
+                        <button onclick="setQuestionCount(30)">30题</button>
+                        <button onclick="setQuestionCount(50)">50题</button>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="start-practice" onclick="startPractice()">开始练习</button>
+                    <button id="view-wrong" onclick="viewWrongQuestions()">查看错题本</button>
+                </div>
+                
+                <div class="stats">
+                    <h3>题库信息：</h3>
+                    <ul>
+                        <li><span class="source-tag source6">子表6</span> 包含60道题目</li>
+                        <li><span class="source-tag source7">子表7</span> 包含60道题目</li>
+                        <li><span class="source-tag source8">子表8</span> 包含60道题目</li>
+                        <li><span class="source-tag source9">子表9</span> 包含60道题目</li>
+                        <li><span class="source-tag source10">子表10</span> 包含30道题目</li>
+                        <li>总共270道学术英语词汇题目</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 练习页面 -->
+            <div id="practice-page" class="hidden">
+                <div class="progress-bar">
+                    <div class="progress" id="progress-bar"></div>
+                </div>
+                <div class="card">
+                    <h3 id="question-text"></h3>
+                    <div id="options-container"></div>
+                    <div id="explanation-container" class="explanation hidden"></div>
+                </div>
+                <div class="action-buttons">
+                    <button onclick="prevQuestion()">← 上一题</button>
+                    <button onclick="nextQuestion()">下一题 →</button>
+                    <button onclick="finishPractice()" style="background-color: #ff9800;">完成练习</button>
+                </div>
+            </div>
+            
+            <!-- 练习结束页面 -->
+            <div id="practice-end-page" class="card hidden">
+                <h2>练习完成！</h2>
+                <p id="score-text"></p>
+                <div class="action-buttons">
+                    <button onclick="returnToHome()">返回主页</button>
+                    <button onclick="startAnotherSet()">再背一组</button>
+                    <button onclick="viewWrongQuestions()">查看错题</button>
+                </div>
+            </div>
+            
+            <!-- 错题本页面 -->
+            <div id="wrong-questions-page" class="hidden">
+                <div class="card">
+                    <h2>错题本</h2>
+                    <p id="wrong-count">当前错题数: 0</p>
+                    <div class="action-buttons">
+                        <button id="select-wrong-questions" onclick="toggleSelectMode()">选择</button>
+                        <button id="delete-selected" class="hidden" onclick="deleteSelectedWrongQuestions()">删除选中</button>
+                        <button id="clear-wrong-questions" onclick="clearWrongQuestions()">清空错题</button>
+                        <button onclick="practiceWrongQuestions()">练习错题</button>
+                        <button onclick="returnToHome()">返回主页</button>
+                    </div>
+                    <div id="wrong-questions-list" class="wrong-questions-list"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 侧边栏导航 -->
+        <div id="question-nav-sidebar" class="sidebar hidden">
+            <h3>题目导航</h3>
+            <div id="question-numbers" class="question-nav"></div>
+            <div class="stats">
+                <p>已答: <span id="answered-count">0</span>题</p>
+                <p>正确: <span id="correct-count">0</span>题</p>
+                <p>错误: <span id="wrong-count">0</span>题</p>
+            </div>
+            <button onclick="finishPractice()" style="margin-top: 15px; width: 100%;">完成练习</button>
+        </div>
+    </div>
+
+    <script>
+        // 题库数据 - 子表6
+        const questionBank6 = [
+            {
+                question: "1. The best way to make these somewhat ______ concepts of satisfaction and dissatisfaction more concrete is to give some illustrations from the interviews.",
+                options: ["A) ______", "B) abstract", "C) tangible", "D) perceptible"],
+                translations: ["", "抽象的", "有形的", "可感知的"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 abstract 的概念所指知识。与 concrete 对应的词只有 abstract，意为'抽象的'。abstract concepts 意为'抽象的概念'。",
+                source: 6
+            },
+            {
+                question: "2. ______ measurement of network bandwidth is crucial for many Internet applications and protocols.",
+                options: ["A) Laboratory", "B) Careful", "C) Objective", "D) Accurate"],
+                translations: ["实验室的", "仔细的", "客观的", "精确的"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 accurate 的语境制约知识。accurate measurement 意为'精确测量'，是常见的专业表达。",
+                source: 6
+            },
+            {
+                question: "3. The Cultural Production and the Mass Media unit ______ the significant contribution of television to 20th-century culture and seeks to equip experts with the methodological tools to analyse this contemporary artistic form.",
+                options: ["A) confesses", "B) accepts", "C) acknowledges", "D) confirms"],
+                translations: ["承认(错误)", "接受", "承认(贡献)", "确认"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 acknowledge 的语义联想知识。acknowledge 意为'承认、认可'，其他各项语义不符。",
+                source: 6
+            },
+            {
+                question: "4. When governments expand ______ demand in an attempt to secure the employment objective, there is a danger that the extra spending will increase prices rather than output.",
+                options: ["A) aggregate", "B) derived", "C) conflicting", "D) statutory"],
+                translations: ["总体的", "派生的", "冲突的", "法定的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 aggregate 的概念所指知识。aggregate demand 意为'总需求量'。derived 表示'派生'，conflicting 表示'冲突'，statutory 表示'立法的'。根据题干的语境，应该选 aggregate。",
+                source: 6
+            },
+            {
+                question: "5. Combined with financial analysis and other factors, this market research can lay the groundwork for strategy decisions, resource ______ and investments.",
+                options: ["A) availability", "B) allocation", "C) commitment", "D) arrangement"],
+                translations: ["可用性", "分配", "承诺", "安排"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 allocation 的搭配模式知识。resource allocation 意为'资源配置'，是固定搭配，其他选项不适合。",
+                source: 6
+            },
+            {
+                question: "6. As a part of the charitable project, another 125 households were ______ to receive a cash transfer equal to the amount spent on business assets and food for people in the graduation program.",
+                options: ["A) retained", "B) reserved", "C) accorded", "D) assigned"],
+                translations: ["保留", "预留", "给予", "分配"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 assign 的概念所指知识。assign 表示'指派，分配'。题干语义为'另有125个家庭被分到一笔汇款'。",
+                source: 6
+            },
+            {
+                question: "7. The Government ______ great importance to the training of food handlers and the new Food Safety Act contains specific provisions on this.",
+                options: ["A) processes", "B) affiliates", "C) attaches", "D) appends"],
+                translations: ["处理", "附属", "赋予", "附加"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 attach 的搭配模式知识。attach great importance to 为固定表达。",
+                source: 6
+            },
+            {
+                question: "8. More recently, some American ______ have argued that there is a case for separate forms of tax linked to particular purposes.",
+                options: ["A) toys", "B) authors", "C) crew", "D) boarders"],
+                translations: ["玩具", "作者", "工作人员", "寄宿者"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 author 的概念所指知识。题干大意为：最近有些美国作家争论说，有为了特定目的而开征单一税种的例子。",
+                source: 6
+            },
+            {
+                question: "9. The researchers caught an intermediate step in the process by which hydrogen is removed from tryptamine (色胺), namely the point at which a proton (质子) disappears from a carbon atom as the carbon-hydrogen ______ breaks.",
+                options: ["A) bond", "B) net", "C) collar", "D) trap"],
+                translations: ["键", "网", "环", "阱"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 bond 的语境制约知识。bond 意为'纽带'，但在化学中意为'键'，carbon-hydrogen bond 意为'碳氢键'。",
+                source: 6
+            },
+            {
+                question: "10. In ______, this software is used to identify, define and characterise the essential functions that the office serves in order to fulfil the organisational objectives.",
+                options: ["A) light", "B) season", "C) brief", "D) point"],
+                translations: ["光", "季节", "简短", "点"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 brief 的搭配模式知识。in brief 为固定搭配，意为'简言之'。",
+                source: 6
+            },
+            {
+                question: "11. This new recruit is ______ of developing graphics, but can not perform any coding or database work.",
+                options: ["A) apt", "B) capable", "C) convinced", "D) excellent"],
+                translations: ["聪明的", "有能力的", "确信的", "优秀的"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 capable 的语境制约知识。本题干委婉地表述新职员的能力。",
+                source: 6
+            },
+            {
+                question: "12. They ______ further evidence of double standards; having exported its dirtiest industries, like heavy manufacturing, to Pakistan, the West wants the country to curb its carbon emissions, potentially impeding its growth and depriving people of their right to a motor car.",
+                options: ["A) refer", "B) indicate", "C) point", "D) cite"],
+                translations: ["提及", "表明", "指出", "引用"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 cite 的语义联想知识。cite 意为'引用'，常与 evidence 搭配，表示'援引证据'。其他选项皆不适合。",
+                source: 6
+            },
+            {
+                question: "13. The nature of this task requires ______ activity of a high order at various levels and between a wide range of participants.",
+                options: ["A) cooperative", "B) manual", "C) psychological", "D) symbiotic"],
+                translations: ["合作的", "手工的", "心理的", "共生的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 cooperative 的语境制约知识。cooperative 意为'合作的'，常用于表达某种态度，其他选项皆不合适。",
+                source: 6
+            },
+            {
+                question: "14. Gender ______ in employment still exists ending up with less vacancy available to females.",
+                options: ["A) division", "B) discrimination", "C) isolation", "D) confusion"],
+                translations: ["划分", "歧视", "隔离", "混淆"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 discrimination 的搭配模式知识。gender discrimination 意为'性别歧视'，为常见的固定搭配。句意：在就业中，性别歧视的存在导致少有空缺职位适合女性。",
+                source: 6
+            },
+            {
+                question: "15. The tournament play software extracts the information and relays it on screen in an easy-to-follow, graphical ______ alongside the HD video footage of each player.",
+                options: ["A) processing", "B) spectacle", "C) front", "D) display"],
+                translations: ["处理", "景象", "前面", "显示"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 display 的概念所指知识。graphical display 意为'图像/图形显示'，符合语义。",
+                source: 6
+            },
+            {
+                question: "16. Plantations have very little biological ______, and some of the fastest growing ones, such as eucalyptus, may require the application of fertilizer and pesticides, and impoverish the soil by leaching out its nutrients.",
+                options: ["A) deficiency", "B) distinction", "C) diversity", "D) dynamic"],
+                translations: ["缺乏", "区别", "多样性", "动态"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 diversity 的搭配模式知识。biological diversity 意为'生物多样性'，属于常用固定表达。",
+                source: 6
+            },
+            {
+                question: "17. TurboTax and other return preparation software will hardly go out of style or pass into the public ______.",
+                options: ["A) territory", "B) frontier", "C) arena", "D) domain"],
+                translations: ["领土", "边界", "舞台", "领域"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 domain 的语义联想知识。题干大意为'波特税务软件及其他报税软件将很难过时或进入公共领域'。public domain 意为'公共领域'。",
+                source: 6
+            },
+            {
+                question: "18. In this year's Paris Fashion Week, with its exclusive design this limited ______ casual top is a must for the fashion conscious!",
+                options: ["A) sample", "B) edition", "C) work", "D) choice"],
+                translations: ["样品", "版本", "作品", "选择"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 edition 的概念所指知识。limited edition 意为'限量版'，为常见固定搭配。句意：这款限量版上衣设计独特，是时尚人士的必备品。",
+                source: 6
+            },
+            {
+                question: "19. 'At the very least,' it is said, 'Microsoft must ______ its credibility on the server side to maintain its desktop position.'",
+                options: ["A) touch up", "B) move upward", "C) enhance", "D) rise up"],
+                translations: ["修饰", "向上移动", "提高", "上升"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 enhance 的语境制约知识。enhance 表示'加强'，为正式词汇，其他选项皆不适合。",
+                source: 6
+            },
+            {
+                question: "20. In most of the factories on trading ______ people are making small products using special skills, such as clothes, televisions, sports goods and packaged foods.",
+                options: ["A) estates", "B) houses", "C) port", "D) stall"],
+                translations: ["区域", "房屋", "港口", "货摊"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 estate 的搭配模式知识。trading estates 意为'工商业区'，为固定搭配。",
+                source: 6
+            },
+            {
+                question: "21. Any compensation shall not ______ the market value of the items lost, or reduction in value of items damaged.",
+                options: ["A) go one better", "B) go beyond", "C) run over", "D) exceed"],
+                translations: ["胜过", "超过", "溢出", "超过"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 exceed 的语境制约知识。exceed 为正式的词汇，符合题目的语境，表示'超越'的意思。",
+                source: 6
+            },
+            {
+                question: "22. It is also well known that the so-called ______ witness in court may be a hired gun, willing to testify to anything for a fee, or a crackpot whose unsupportable ideas are masked by an advanced degree—often from a respectable university.",
+                options: ["A) core", "B) expert", "C) silent", "D) potential"],
+                translations: ["核心的", "专家的", "沉默的", "潜在的"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 expert 的概念所指知识。expert witness 意为'专家证人'，与 hired gun（特聘的专家）对应，因此选 expert。",
+                source: 6
+            },
+            {
+                question: "23. Special manuals provide ______ and elaborate instructions as to the creating of different icons and the use of different kinds of material.",
+                options: ["A) explicit", "B) exact", "C) straightforward", "D) distinct"],
+                translations: ["明确的", "精确的", "直白的", "独特的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 explicit 的概念所指知识。explicit 表示'明确的、清楚的'；exact 表示'准确的'；straightforward 表示'直白的'；distinct 表示'独特的'。题干意为'特别说明书就创建不同的图标及使用不同的材料提供清楚详尽的说明'，只有 explicit 符合这个语义。",
+                source: 6
+            },
+            {
+                question: "24. Constructing the ______ budget is a protracted and complex matter, not easily described in brief.",
+                options: ["A) allied", "B) approval", "C) federal", "D) alliance"],
+                translations: ["联合的", "批准的", "联邦的", "联盟"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 federal 的概念所指知识。federal budget 表示'联邦预算'，符合句意，其他各项皆不符合。",
+                source: 6
+            },
+            {
+                question: "25. Local authorities often charge a different ______ to their own residents and ratepayers than to outsiders, although there may be concessions to former residents and community charge payers.",
+                options: ["A) tariff", "B) crime", "C) administration", "D) fee"],
+                translations: ["关税", "犯罪", "管理", "费用"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 fee 的概念所指知识。题干语义为'当地政府常常对本地居民及纳税人和外来人员收取不同的费用'。fee 表示'费用'，符合题干的语义，其他各项皆不符合。",
+                source: 6
+            },
+            {
+                question: "26. The higher animals are capable of considerable ______ in adjusting their behaviour to widely differing and continuously changing circumstances, where the relevant 'parameters' are structural features, rather than physical ones.",
+                options: ["A) reliability", "B) flexibility", "C) variation", "D) versatility"],
+                translations: ["可靠性", "灵活性", "变化", "多功能性"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 flexibility 的概念所指知识。题干大意为'高大的动物有很强的灵活性，根据环境的变化调整自己的行为'，只有 flexibility 符合该语境，表示'灵活性'，其他选项皆不符合。",
+                source: 6
+            },
+            {
+                question: "27. In fact, patients became a helpful part of the record-keeping process, and ______, increased their understanding of their own conditions and improved adherence to care protocols.",
+                options: ["A) in addition to", "B) though", "C) nevertheless", "D) furthermore"],
+                translations: ["除了", "尽管", "然而", "而且"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 furthermore 的概念所指知识。furthermore 表示'而且'，符合题干的语义。",
+                source: 6
+            },
+            {
+                question: "28. Psychoanalysis suggest that men's ______ identity is very fragile because, within typical child-rearing practices, girls can identify with their primary care-taker while boys have to separate themselves from their mother in order to achieve and assert their masculinity.",
+                options: ["A) personnel", "B) ethnic", "C) gender", "D) common"],
+                translations: ["人事的", "种族的", "性别的", "共同的"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 gender 的搭配模式知识。gender identity 意为'性别认同'，为固定搭配。",
+                source: 6
+            },
+            {
+                question: "29. Apart from the fact that this ______ the possibility that shareholders may have other objectives in investing, the profit-maximization norm does not provide a hard guideline as to how directors should exercise their discretion.",
+                options: ["A) ignores", "B) assesses", "C) vindicates", "D) contemplates"],
+                translations: ["忽视", "评估", "辩护", "考虑"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 ignore 的概念所指知识。ignore 表示'忽视'，与后面的 do not provide 对应，符合题目意思。",
+                source: 6
+            },
+            {
+                question: "30. In electricity market, power network corporations need affording some ______ payment to the power supply corporation.",
+                options: ["A) boost", "B) incentive", "C) impulse", "D) inducement"],
+                translations: ["推动", "激励", "冲动", "引诱"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 incentive 的搭配模式知识。incentive payment 意为'奖金，激励性报酬'，为职场中常见的搭配。",
+                source: 6
+            },
+            {
+                question: "31. Climate change is changing precipitation patterns and intensity, increasing the ______ of droughts, floods, and erosion.",
+                options: ["A) infection", "B) influence", "C) incidence", "D) relation"],
+                translations: ["感染", "影响", "发生率", "关系"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 incidence 的概念所指知识。incidence 意为'发生率'，符合语义。句意：天气变化正改变着降水模式及强度，从而增加了干旱、洪水及侵蚀的发生率。",
+                source: 6
+            },
+            {
+                question: "32. Sophisticated systems ______ audible and visual signals to warn of product exhaustion, or malfunction, and interlock to prevent the wrong product being fitted.",
+                options: ["A) incorporate", "B) compound", "C) mix", "D) join"],
+                translations: ["合并", "混合", "混合", "连接"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 incorporate 的概念所指知识。题干意为'复杂系统合并影音信号来预警产品耗尽或功能故障，并且锁定以防止错误产品被安装'。incorporate 意为'合并'，符合句意，其他选项皆不符合。",
+                source: 6
+            },
+            {
+                question: "33. The fair price of the stock ______ futures contract can be calculated in precisely the same way as with the other contracts.",
+                options: ["A) finger", "B) needle", "C) indicator", "D) index"],
+                translations: ["手指", "针", "指示器", "指数"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 index 的语境制约知识。the stock index futures 意为'股指期货'，是固定的专业术语表达。",
+                source: 6
+            },
+            {
+                question: "34. Fear of costs is one of the major ______ which prevents clients from consulting lawyers.",
+                options: ["A) confusions", "B) possessions", "C) inhibitions", "D) composure"],
+                translations: ["困惑", "财产", "抑制", "镇静"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 inhibition 的概念所指知识。题干意为'费用方面的忧虑是阻止客户咨询律师的主要制约之一'。inhibition 意为'约束，压抑（多指心理方面的）'，符合句意。",
+                source: 6
+            },
+            {
+                question: "35. The Prince's Trust is soon to launch a pioneering ______ which will eventually involve large numbers of Britain's young people in voluntary work.",
+                options: ["A) assertion", "B) initiative", "C) measure", "D) activity"],
+                translations: ["断言", "倡议", "措施", "活动"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 initiative 的语境制约知识。题干语义为'王子信托基金将发起一个开拓型的倡议，最终吸引大量的英国年轻人参与志愿者服务工作'。launch a pioneering initiative 为专业性的表述。",
+                source: 6
+            },
+            {
+                question: "36. For reasons that lie deep in the evolutionary history of the vertebrates, the right hemisphere deals with sensory ______ from the left-hand side of the body, and vice versa.",
+                options: ["A) input", "B) alert", "C) intake", "D) hint"],
+                translations: ["输入", "警觉", "摄取", "暗示"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 input 的搭配模式知识。sensory input 意为'感官输入'，为常用固定表达。",
+                source: 6
+            },
+            {
+                question: "37. The process of running a program means that it carries out the CPU ______ in the program file, some of which will involve telling the PC to look for certain data files on disk which it will use for its own ends.",
+                options: ["A) statements", "B) prescriptions", "C) mandates", "D) instructions"],
+                translations: ["语句", "处方", "命令", "指令"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 instruction 的语义联想知识。题干提及'计算机执行 CPU 的指令来执行程序'，只有 instructions 符合题干的语义。",
+                source: 6
+            },
+            {
+                question: "38. This belief in the capacity of ______ tests to measure the entire child population was echoed by the rarer suggestion that educational psychologists should play a greater part in the allocation process.",
+                options: ["A) appetite", "B) intelligence", "C) stamina", "D) suppleness"],
+                translations: ["食欲", "智力", "耐力", "柔韧性"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 intelligence 的语境制约知识。intelligence test 意为'智力测验'，为常用的心理学专业词汇，符合题干的语境，其他各项皆不符合。",
+                source: 6
+            },
+            {
+                question: "39. Sometimes, because your employee is paid at ______ which are not exact multiples of a week or a month, the earnings period may not match exactly with tax weeks or months.",
+                options: ["A) break", "B) regulation", "C) intervals", "D) interlude"],
+                translations: ["休息", "规定", "间隔", "插曲"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 interval 的搭配模式知识。at intervals 为固定搭配，意为'隔段时间'。",
+                source: 6
+            },
+            {
+                question: "40. For note-taking in ______ and seminars, amongst noisy machinery and other background conversations, speech input would be difficult.",
+                options: ["A) lectures", "B) briefs", "C) analysis", "D) proposals"],
+                translations: ["讲座", "简报", "分析", "建议"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 lecture 的概念所指知识。在四个选项中，只有 lecture 与 seminar 意思相近。句子大意为'在讲座和专题讨论上做笔记时，在有声称的机器及其他背景谈话的环境中，语言输入将会很难'。",
+                source: 6
+            },
+            {
+                question: "41. For a cold blooded insect, the main reason for seasonal ______ is probably the need to be in a warm enough place to allow an active life; a warm blooded bird does not have that problem.",
+                options: ["A) allocation", "B) movement", "C) motion", "D) migration"],
+                translations: ["分配", "移动", "运动", "迁徙"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 migration 的搭配模式知识。seasonal migration 意为'季节性迁徙'，为常见的固定搭配。",
+                source: 6
+            },
+            {
+                question: "42. ______ wages were raised from $1.15 to $1.45 an hour, and social security benefits were increased to cover an additional 10 million people.",
+                options: ["A) Minute", "B) Minimum", "C) Tiniest", "D) Minimal"],
+                translations: ["分钟", "最低", "微小的", "最小的"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 minimum 的语境制约知识。minimum wage 意为'最低时薪'，为专业词汇，其他各项皆不符合语境。",
+                source: 6
+            },
+            {
+                question: "43. The National Labor Office, a division of the ______ of Labor, probably needs to raise several million dollars to complete the scheme as originally specified.",
+                options: ["A) Agency", "B) Association", "C) Ministry", "D) Organization"],
+                translations: ["机构", "协会", "部", "组织"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 ministry 的搭配模式知识。the Ministry of Labor 意为'劳动部'，是常见的固定搭配。",
+                source: 6
+            },
+            {
+                question: "44. The criteria for eliciting initiative that many researchers point to would be intrinsic ______, cognitive effort, and cumulative effort, when explaining how and why organized activities promote positive youth development.",
+                options: ["A) motivation", "B) inducement", "C) spark", "D) seducement"],
+                translations: ["动机", "引诱", "火花", "诱惑"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 motivation 的概念所指知识。intrinsic motivation 意为'内在动机'，符合题干语义。",
+                source: 6
+            },
+            {
+                question: "45. These tips help to keep your wrists in a/an ______ position by preventing under or over pronation — bending them too much up or down.",
+                options: ["A) independent", "B) neutral", "C) fair", "D) uniform"],
+                translations: ["独立的", "中立的", "公平的", "一致的"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 neutral 的概念所指知识。independent 意为'独立的'，neutral 意为'中立的'，fair 意为'公平的'，uniform 意为'一致的'。根据上下文，可知选 neutral。句意：这些技巧有助于保持你的手腕处于一个中间的位置，避免内旋不足或过度——向上或向下过度弯曲它们。",
+                source: 6
+            },
+            {
+                question: "46. The market has continued to fluctuate since then (with a notable dip following the 2008 recession); ______, High Point has remained the world's largest furniture market for decades.",
+                options: ["A) nevertheless", "B) despite", "C) instead", "D) in spite"],
+                translations: ["然而", "尽管", "相反", "尽管"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 nevertheless 的概念所指知识。句意为'自从2008年经济萧条后的明显下滑，市场持续动荡，然而高点家具展几十年来始终保持了世界最大的家具市场地位'。nevertheless 表示转折让步语义，符合语境。",
+                source: 6
+            },
+            {
+                question: "47. The enlargement of the ______ tourist market means that there are more and more contacts and collision of different culture.",
+                options: ["A) offshore", "B) financial", "C) coastal", "D) overseas"],
+                translations: ["离岸的", "金融的", "沿海的", "海外的"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 overseas 的搭配模式知识。the overseas tourist market 意为'海外旅游市场'，为较常见的固定表达。",
+                source: 6
+            },
+            {
+                question: "48. In the light of the ______ discussion, however, professor wishes to suggest an alternative classification; one which is based on the intentions that adults might have in modifying their speech in particular ways when talking to children.",
+                options: ["A) preferred", "B) highlighted", "C) preceding", "D) previewing"],
+                translations: ["偏好的", "突出的", "在前的", "预览的"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 preceding 的概念所指知识。the preceding discussion 意为'先前的讨论'，符合题意。",
+                source: 6
+            },
+            {
+                question: "49. There is still a ______ of dangerousness and guilt that gets assigned to black and brown people, even in modern western world.",
+                options: ["A) presumption", "B) confidence", "C) declaration", "D) modesty"],
+                translations: ["推定", "信心", "声明", "谦虚"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 presumption 的语境制约知识。句意为'尽管在现代化的西方世界，仍有一种危险和犯罪的推定被强加给了黑色及棕色人群'。presumption 表示'推测'，为较常见的专业词汇，符合该语境。",
+                source: 6
+            },
+            {
+                question: "50. Most people are not highly adept in political events and use various cognitive shortcuts to help them make ______ choices while voting, anyway.",
+                options: ["A) analytic", "B) sensible", "C) intellectual", "D) rational"],
+                translations: ["分析的", "明智的", "智力的", "合理的"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 rational 的概念所指知识。analytic 指'善于分析的'；sensible 指'明智的，通情达理的'；intellectual 指'智力的，聪明的'；rational 指'合理的，理性的'，符合语境。句意为'大多数公众并不很擅长政治问题，并在选举时，使用各种认知使您帮助自己作出合理的选择'。",
+                source: 6
+            },
+            {
+                question: "51. The housing crisis has been the single biggest drag on our ______ from the recession.",
+                options: ["A) rescue", "B) recovery", "C) backup", "D) replenishment"],
+                translations: ["救援", "复苏", "备份", "补充"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 recovery 的概念所指知识。题干语义为'楼市危机已成为经济复苏的唯一最大拖累'。recovery 表示'复苏，恢复'，符合语义概念，其他选项皆不符合。",
+                source: 6
+            },
+            {
+                question: "52. An X-ray picture should ______ the extent of the defect associated with the hip joints.",
+                options: ["A) come out", "B) expose", "C) reveal", "D) bring out"],
+                translations: ["出来", "暴露", "揭示", "带出"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 reveal 的语境制约知识。reveal 表示'揭露（一直隐藏或隐秘的东西）'，为正式用词，其他选项皆不合适。",
+                source: 6
+            },
+            {
+                question: "53. Rich economies as a whole gain from the new wealth of emerging ones, so governments have ample ______ to compensate the losers, but they rarely do.",
+                options: ["A) core", "B) size", "C) scale", "D) scope"],
+                translations: ["核心", "大小", "规模", "空间"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 scope 的搭配模式知识。ample scope 意为'充足的空间'，为学术领域词语搭配，符合题意。句意：富裕经济体作为一个整体从新兴经济体的新财富中获益，因此政府有足够的空间来补偿输家，但他们很少这样做。",
+                source: 6
+            },
+            {
+                question: "54. Skyfire will remain an independent entity as a wholly-owned ______ of Opera, and will continue to develop and support the Skyfire browser.",
+                options: ["A) attachment", "B) subsidiary", "C) supplement", "D) option"],
+                translations: ["附件", "子公司", "补充", "选项"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 subsidiary 的搭配模式知识。a wholly-owned subsidiary 意为'全资子公司'，为常见搭配。",
+                source: 6
+            },
+            {
+                question: "55. Furthermore, some media such as magnetic ______ are subject to storage degradation if they are not regularly used.",
+                options: ["A) tapes", "B) disc", "C) traps", "D) tracks"],
+                translations: ["磁带", "光盘", "陷阱", "轨道"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 tape 的搭配模式知识。magnetic tape 意为'磁带'，为固定表达。",
+                source: 6
+            },
+            {
+                question: "56. Customs officers are trying to ______ the source of drugs worth a hundred and fifty thousand pounds discovered in a consignment of onions.",
+                options: ["A) observe", "B) head", "C) trace", "D) catch"],
+                translations: ["观察", "前往", "追踪", "抓住"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 trace 的概念所指知识。题干大意为'海关官员正尽力追查在一批洋葱中发现的价值15万英镑毒品的源头'。trace 表示'追踪，追查'，符合句意。",
+                source: 6
+            },
+            {
+                question: "57. The mobile revolution will inevitably convert your business in the next decade, too—not because mobile will generate massive direct revenues but because it will trigger a more radical ______ toward systems of engagement.",
+                options: ["A) variation", "B) transformation", "C) implication", "D) adjustment"],
+                translations: ["变化", "转变", "牵连", "调整"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 transformation 的概念所指知识。题干大意为'移动革命将不可避免地在下个十年改变你的行业，不仅因为移动技术会产生巨大的直接利润，而且因为它将朝着交互系统的方面激起更为激进的变革'。根据题干语义，应选 transformation。radical transformation 意为'激进的变革'。",
+                source: 6
+            },
+            {
+                question: "58. Vaccines were ______ from a central distribution point to 53 general practices and six health clinics in the former Central Birmingham Health District.",
+                options: ["A) transported", "B) handed", "C) sheltered", "D) bestowed"],
+                translations: ["运输", "递交", "庇护", "授予"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 transport 的概念所指知识。题干大意为'疫苗从中心发放点被运送到前伯明翰中部保健区的53个医疗点及6个健康诊所'。transport 表示'运输，运送'，符合语义，其他选项皆不合适。",
+                source: 6
+            },
+            {
+                question: "59. Metals markets are particularly attractive for sharp operators because, unlike some other commodities, or equities, the ______ asset can be stored indefinitely without spoilage or change.",
+                options: ["A) extensive", "B) crucial", "C) refined", "D) underlying"],
+                translations: ["广泛的", "关键的", "精炼的", "基础的"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 underlying 的语境制约知识。underlying asset 意为'标的资产'，是常见的专业词汇。",
+                source: 6
+            },
+            {
+                question: "60. The intent was to revive the battered construction industry and reduce ______ bills for struggling low-income homeowners.",
+                options: ["A) service", "B) house", "C) utility", "D) value"],
+                translations: ["服务", "房屋", "公用事业", "价值"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 utility 的搭配模式知识。utility bill 意为'费用单、水电费账单'，是常用固定搭配。",
+                source: 6
+            }
+        ];
+
+        // 题库数据 - 子表7
+        const questionBank7 = [
+            {
+                question: "1. Scientists think that a fear of heights is a successful ______ to our world, where falls from heights are dangerous.",
+                options: ["A) conversion", "B) adaptation", "C) modification", "D) transformation"],
+                translations: ["转换", "适应", "修改", "转化"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 adaptation 的概念所指知识。conversion 意为'转换，变换'；adaptation 意为'适应'，常与 to 搭配使用；modification 意为'修改，改变'；transformation 意为'转化'。根据上下文可知，应选 adaptation。",
+                source: 7
+            },
+            {
+                question: "2. Between 2000 and 2015, the share of young ______ between the ages of 25 and 34 with bachelor's degrees grew.",
+                options: ["A) adults", "B) adolescents", "C) juniors", "D) seniors"],
+                translations: ["成年人", "青少年", "初级者", "年长者"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 adult 的概念所指知识。年龄在 25 ～ 34 岁的应该是成年人，即 adult。",
+                source: 7
+            },
+            {
+                question: "3. Three weeks after the tragic accident, the report issued on Monday ______ that all buildings be fitted with smoke detectors.",
+                options: ["A) encouraged", "B) supported", "C) upheld", "D) advocated"],
+                translations: ["鼓励", "支持", "维护", "提倡"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 advocate 的概念所指知识。advocate 意为'提倡，鼓吹'，符合句意。",
+                source: 7
+            },
+            {
+                question: "4. Having a well-stocked first ______ kit near your swimming pool can help you take care of anything unexpected.",
+                options: ["A) service", "B) care", "C) treatment", "D) aid"],
+                translations: ["服务", "照料", "治疗", "援助"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 aid 的搭配模式知识。first aid 为固定搭配，表示'急救'。",
+                source: 7
+            },
+            {
+                question: "5. Customers may favour an old and familiar ______ that works moderately well even when a new one might seem better.",
+                options: ["A) channel", "B) tunnel", "C) media", "D) agent"],
+                translations: ["渠道", "隧道", "媒体", "代理"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 channel 的语义联想知识。channel 表示'渠道，途径，方式'；tunnel 表示'隧道'；media 是复数形式，表示'媒体'；agent 表示'中介'。",
+                source: 7
+            },
+            {
+                question: "6. The ______ reactivity of a single substance covers its behavior in which it forms new substances by addition of atoms from another reactant or reactants.",
+                options: ["A) physical", "B) ecological", "C) chemical", "D) physiological"],
+                translations: ["物理的", "生态的", "化学的", "生理的"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 chemical 的概念所指知识。句子是对化学反应性的定义。",
+                source: 7
+            },
+            {
+                question: "7. In such cases in addition to the four ______ symptoms, affected individuals also have great difficulty in breathing.",
+                options: ["A) obvious", "B) classical", "C) noticeable", "D) recognized"],
+                translations: ["明显的", "典型的", "显著的", "公认的"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 classical 的语境制约知识。classical symptom 表示'典型症状'，是常见的医学术语。",
+                source: 7
+            },
+            {
+                question: "8. This company offers competitive compensation package including ______ healthcare benefits starting on Day 1.",
+                options: ["A) far-reaching", "B) absolute", "C) comprehensive", "D) general"],
+                translations: ["深远的", "绝对的", "全面的", "一般的"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 comprehensive 的概念所指知识。comprehensive 表示'全面的，综合的'；far-reaching 意为'深远的'；absolute 意为'绝对的'；general 意为'概况性的，一般的'。",
+                source: 7
+            },
+            {
+                question: "9. Apart from this, region-wise market analysis is done which comprises ______ key regions including U. S. and China.",
+                options: ["A) with", "B) of", "C) in", "D) at"],
+                translations: ["和", "的", "在...里", "在"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 comprise 的搭配模式知识。comprise of 为固定搭配，意为'由……组成'。",
+                source: 7
+            },
+            {
+                question: "10. This epidemic was found in 1994 and since then, there have been 60 ______ outbreaks in horses resulting in the deaths of 100 animals.",
+                options: ["A) accepted", "B) accustomed", "C) settled", "D) confirmed"],
+                translations: ["接受的", "习惯的", "稳定的", "确诊的"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 confirmed 的概念所指知识。accepted 表示'接受的'；accustomed 表示'习惯的'；settled 表示'稳定的'；confirmed 表示'被证实的'，符合句意。",
+                source: 7
+            },
+            {
+                question: "11. A very recent study adds to the evidence contrary ______ this idea, but it is likely unavailable at the time being.",
+                options: ["A) to", "B) for", "C) with", "D) of"],
+                translations: ["对于", "为了", "和", "的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 contrary 的搭配模式知识。contrary to 为固定搭配，意为'与……相反'。",
+                source: 7
+            },
+            {
+                question: "12. This is a rare opportunity to acquire one of the few ______ ships that were used for commercial trading in this country.",
+                options: ["A) changed", "B) converted", "C) reformed", "D) transferred"],
+                translations: ["改变的", "改装的", "改革的", "转移的"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 converted 的语义联想知识。changed 表示'改变的'；converted 表示'改装的，改变形态的'；reformed 表示'改革的'；transferred 表示'转移的'。",
+                source: 7
+            },
+            {
+                question: "13. The experts believe the case for global warming in the last ______ of decades is strong, but they still need more evidence.",
+                options: ["A) set", "B) course", "C) duration", "D) couple"],
+                translations: ["套", "过程", "期间", "几个"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 couple 的搭配模式知识。couple of 是固定搭配，表示'几个'。",
+                source: 7
+            },
+            {
+                question: "14. For ______, those trying to make better sunscreen found a roadblock at the Food and Drug Administration (FDA).",
+                options: ["A) centuries", "B) times", "C) decades", "D) periods"],
+                translations: ["世纪", "时代", "十年", "时期"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 decade 的概念所指知识。decade 表示'十年'；century 表示'世纪'，根据常识可知，FDA存在的时间并没有几个世纪那么长；不存在 for times 和 for periods 这两种用法。",
+                source: 7
+            },
+            {
+                question: "15. It is not easy to reach any ______ conclusions based upon such a small sample of students from such widely different backgrounds.",
+                options: ["A) definite", "B) defective", "C) deferring", "D) default"],
+                translations: ["明确的", "有缺陷的", "延迟的", "默认"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 definite 的概念所指知识。在几个形式相近的词中，只有 definite 的意义能切合题干的含义，表示'明确的、清楚的'。",
+                source: 7
+            },
+            {
+                question: "16. Here, when you speak of the existence of God, you carefully avoid any positive affirmation; you neither affirm nor ______.",
+                options: ["A) withhold", "B) deny", "C) reject", "D) oppose"],
+                translations: ["保留", "否认", "拒绝", "反对"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 deny 的语义联想知识。withhold 表示'保留、不给'；reject 表示'拒绝（接受、考虑）'；oppose 表示'反对'。只有 deny 与 affirm 构成反义关系，表示'否认'。",
+                source: 7
+            },
+            {
+                question: "17. We can easily recognize man and ape, but at molecular level, this kind of ______ is not easy to obtain.",
+                options: ["A) separation", "B) distraction", "C) differentiation", "D) segregation"],
+                translations: ["分离", "分心", "区分", "隔离"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 differentiation 的概念所指知识。在四个选项中，只有 differentiation 的意义能切合题干的含义，表示'区分'。",
+                source: 7
+            },
+            {
+                question: "18. The experts suggest that there should be at least half a dozen pillows ______ the disposal of the patient, besides three or four for the head.",
+                options: ["A) with", "B) at", "C) in", "D) for"],
+                translations: ["和", "在", "在...里", "为了"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 disposal 的搭配模式知识。at the disposal of 为固定搭配，表示'任凭……使用'。",
+                source: 7
+            },
+            {
+                question: "19. The world-picture presented in this encyclopedia is that of a ______ universe, of phenomena in process of ceaseless change.",
+                options: ["A) dynamic", "B) diversified", "C) developed", "D) dissolved"],
+                translations: ["动态的", "多样化的", "发达的", "溶解的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 dynamic 的概念所指知识。后面的 ceaseless change 就是对 dynamic 的解释，表示'动态的、不停变化的'。",
+                source: 7
+            },
+            {
+                question: "20. This diet claims to ______ toxins from the body, though still there is much controversy over its safety.",
+                options: ["A) eliminate", "B) discard", "C) cancel", "D) ignore"],
+                translations: ["消除", "丢弃", "取消", "忽视"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 eliminate 的语义联想知识。discard 表示'丢弃、抛弃'；cancel 表示'取消'；ignore 表示'忽视、忽略'。只有 eliminate 语义适当，表示'排除、清除'。",
+                source: 7
+            },
+            {
+                question: "21. No ______ data support his claim that the birth of a baby with this syndrome makes the world or the baby unhappier.",
+                options: ["A) descriptive", "B) pragmatic", "C) empirical", "D) theoretical"],
+                translations: ["描述的", "实用的", "实证的", "理论的"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 empirical 的概念所指知识。descriptive 意为'描写的、叙述的'；pragmatic 意为'实际的'；theoretical 意为'理论的'；empirical 意为'实证的'，符合语义。",
+                source: 7
+            },
+            {
+                question: "22. Meanwhile enough machinery and other ______ was being prepared and shipped from Canada to afford employment to 10,000 men.",
+                options: ["A) personnel", "B) service", "C) resource", "D) equipment"],
+                translations: ["人员", "服务", "资源", "设备"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 equipment 的概念所指知识。machinery 应该与后面的词属于同一范畴，只有 equipment 适合。",
+                source: 7
+            },
+            {
+                question: "23. Eventually the scientists found a reliable method to ______ sufficient DNA from the roots, and they did indeed find the virus.",
+                options: ["A) extract", "B) obtain", "C) pull", "D) squeeze"],
+                translations: ["提取", "获得", "拉", "挤压"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 extract 的概念所指知识。obtain 表示'获得'；pull 表示'拉、拔'；squeeze 表示'挤压、榨取'。只有 extract 语义适当，表示'抽取、提取'。",
+                source: 7
+            },
+            {
+                question: "24. And so there is no way that I can tell for sure that he was or he wasn't responsible, because we never did maintain a ______ in this direction.",
+                options: ["A) register", "B) file", "C) data", "D) case"],
+                translations: ["登记", "档案", "数据", "案例"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 file 的语义联想知识。register 表示'登记表'；data 表示'数据'，为复数形式；case 表示'案例、事件'。只有 file 意义适当，表示'档案、卷宗'。",
+                source: 7
+            },
+            {
+                question: "25. Nowadays it has been recognized that many of the fuels we use to generate electricity—natural gas, oil, coal—are abundant yet ______.",
+                options: ["A) fixed", "B) extra", "C) scarce", "D) finite"],
+                translations: ["固定的", "额外的", "稀有的", "有限的"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 finite 的概念所指知识。只有 finite 与前面的 abundant 语义结合比较贴切，表示'有限的'。",
+                source: 7
+            },
+            {
+                question: "26. It was, in fact, the possibility of such conflict which was recognized by our theory as the origin and ______ of society.",
+                options: ["A) support", "B) authority", "C) infrastructure", "D) foundation"],
+                translations: ["支持", "权威", "基础设施", "基础"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 foundation 的概念所指知识。support 表示'支持'；authority 表示'权威'；infrastructure 表示'基础设施'。只有 foundation 语义适当，表示'基础、根基'。",
+                source: 7
+            },
+            {
+                question: "27. After nearly forty years, the Cold War was still going on, but now the scale had expanded from the ______ to the interplanetary.",
+                options: ["A) national", "B) continental", "C) global", "D) universal"],
+                translations: ["国家的", "大陆的", "全球的", "宇宙的"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 global 的概念所指知识。根据上下文，只有 global 与 interplanetary 语义结合比较贴切。expand from the global to the interplanetary 表示'从地球扩展到国际间'。",
+                source: 7
+            },
+            {
+                question: "28. It suddenly became a lot harder to apply for a long term visa, so those with poor English and a low education struggled to make the ______.",
+                options: ["A) degree", "B) grade", "C) achievement", "D) standard"],
+                translations: ["学位", "等级", "成就", "标准"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 grade 的搭配模式知识。make the grade 是固定搭配，表示'达到标准'，符合题意。",
+                source: 7
+            },
+            {
+                question: "29. After all, freeing hostages as goodwill gestures, without a ______ of some benefit, is not the way the terrorist group operates.",
+                options: ["A) guarantee", "B) certificate", "C) warrant", "D) security"],
+                translations: ["保证", "证书", "许可证", "安全"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 guarantee 的概念所指知识。certificate 表示'证书'；warrant 表示'执行令，许可证'；security 表示'安全'。只有 guarantee 语义适当，表示'担保，保证'。",
+                source: 7
+            },
+            {
+                question: "30. The social structure of the Middle Ages accordingly assumed the ______ form which we speak of as the feudal system.",
+                options: ["A) hierarchical", "B) irrational", "C) proportional", "D) operational"],
+                translations: ["等级制的", "不合理的", "成比例的", "操作的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 hierarchical 的语境制约知识。根据上下文，只有 hierarchical 与 feudal system 语义结合比较贴切，表示'等级制度的'。",
+                source: 7
+            },
+            {
+                question: "31. This had a very minimal impact, since the model used in X330 is essentially identical ______ what X299 had already defined.",
+                options: ["A) for", "B) to", "C) among", "D) in"],
+                translations: ["为了", "与", "在...之中", "在...里"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 identical 的搭配模式知识。be identical to 为固定搭配，表示'与……相同，完全一致'。",
+                source: 7
+            },
+            {
+                question: "32. A/An ______ is a collection of normative beliefs and values that an individual or group holds for and are unrelated to pursuing knowledge.",
+                options: ["A) interpretation", "B) connotation", "C) concept", "D) ideology"],
+                translations: ["解释", "内涵", "概念", "意识形态"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 ideology 的概念所指知识。此句子是对 ideology 的解释说明，其他选项意义都不符合。",
+                source: 7
+            },
+            {
+                question: "33. A giant underground ocean could exist as well, and clues to its presence could be ______ by the geology or chemistry of Pluto's surface.",
+                options: ["A) implicated", "B) inducted", "C) inferred", "D) interpreted"],
+                translations: ["牵连", "引导", "推断", "解释"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 infer 的概念所指知识。根据上下文，只有 infer（推断，推论）语义结合比较贴切。句子大意：利用地理和化学信息可以推断一个巨大的地下海洋可能存在。",
+                source: 7
+            },
+            {
+                question: "34. We can say that the result was a system not open to alternatives from the outside and with no internal incentives for ______.",
+                options: ["A) innovation", "B) modernization", "C) deviation", "D) variation"],
+                translations: ["创新", "现代化", "偏离", "变异"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 innovation 的概念所指知识。modernization 表示'现代化'；deviation 表示'背离'；variation 表示'变异'。只有 innovation 语义适当，表示'创新'。",
+                source: 7
+            },
+            {
+                question: "35. When selecting the domestic charging mode, just ______ the special plug at the front of car into a common 220V domestic power socket.",
+                options: ["A) insert", "B) draw", "C) push", "D) cast"],
+                translations: ["插入", "拉", "推", "投掷"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 insert 的搭配模式知识。insert the plug 是常见的搭配，意为'插上插座'。",
+                source: 7
+            },
+            {
+                question: "36. If we could prevent behavioural problems with an early ______, in the sense of public health it could be very important.",
+                options: ["A) mediation", "B) distraction", "C) complication", "D) intervention"],
+                translations: ["调解", "分心", "并发症", "干预"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 intervention 的概念所指知识。根据上下文，只有 intervention 语义结合比较贴切，表示'干预'。",
+                source: 7
+            },
+            {
+                question: "37. ______ lesbians learned that in society there were other women like them via books whose covers aimed to attract men.",
+                options: ["A) Confined", "B) Detached", "C) Separated", "D) Isolated"],
+                translations: ["受限的", "分离的", "分开的", "孤立的"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 isolated 的语义联想知识。confined 表示'封闭的、限制的'；detached 表示'分开的'；separated 表示'分开的'。只有 isolated 语义适当，表示'孤立的、孤独的'。",
+                source: 7
+            },
+            {
+                question: "38. Social ______ are interactive technologies that facilitate the creation and sharing of information, ideas, career interests and other forms of expression via virtual communities and networks.",
+                options: ["A) networks", "B) media", "C) communications", "D) interactions"],
+                translations: ["网络", "媒体", "通讯", "互动"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 media 的概念所指知识。此句子是对 social media 的解释说明，其他选项意义都不符合。",
+                source: 7
+            },
+            {
+                question: "39. It points out that the new teaching ______ can make difficult knowledge easy to understand and vivid, thus producing better teaching results.",
+                options: ["A) mode", "B) status", "C) condition", "D) trend"],
+                translations: ["模式", "状态", "条件", "趋势"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 mode 的概念所指知识。status 表示'地位、情形'；condition 表示'条件、状况'；trend 表示'潮流'。只有 mode 语义适当，表示'模式'。",
+                source: 7
+            },
+            {
+                question: "40. In his new book, the author told different stories to show that the war was a ______ of the destructive side of human nature.",
+                options: ["A) paradigm", "B) standard", "C) sample", "D) prototype"],
+                translations: ["范例", "标准", "样本", "原型"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 paradigm 的语义联想知识。standard 表示'标准'，sample 表示'样本'，prototype 表示'原型'。只有 paradigm 语义适当，表示'范例'。",
+                source: 7
+            },
+            {
+                question: "41. This revenue could be substantially higher, said the report, were it not for the global ______ of copyright theft.",
+                options: ["A) miracle", "B) phenomenon", "C) reality", "D) episode"],
+                translations: ["奇迹", "现象", "现实", "插曲"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 phenomenon 的搭配模式知识。在四个选项中，只有 phenomenon 可以和 global 搭配。",
+                source: 7
+            },
+            {
+                question: "42. Under such circumstance, the search for a new vaccine will take priority ______ all other medical research to save more lives.",
+                options: ["A) above", "B) in", "C) over", "D) up"],
+                translations: ["在...上", "在...里", "在...之上", "向上"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 priority 的搭配模式知识。take priority over 是固定搭配，表示'排在……之前'。",
+                source: 7
+            },
+            {
+                question: "43. ______ items are not allowed to enter, the examples of which are dangerous toys, cars that don't protect their occupants in a crash, or illegal substances.",
+                options: ["A) Prohibited", "B) Problematic", "C) Processed", "D) Prolonged"],
+                translations: ["禁止的", "有问题的", "加工的", "延长的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 prohibited 的概念所指知识。此句子是对于违禁物品（prohibited items）的举例说明，其他选项意义都不符合。",
+                source: 7
+            },
+            {
+                question: "44. We can find that the shortest term of copyright exists in Greece, where it endures for but fifteen years from ______.",
+                options: ["A) announcement", "B) advertisement", "C) disclosure", "D) publication"],
+                translations: ["公告", "广告", "披露", "出版"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 publication 的概念所指知识。announcement 表示'通告'；advertisement 表示'广告'；disclosure 表示'公开、透露'。只有 publication 意义合适，表示'出版'。",
+                source: 7
+            },
+            {
+                question: "45. As for the basis for establishing the Confederate States, consider a ______ from Mississippi's declaration of independence, adopted in 1861.",
+                options: ["A) question", "B) quest", "C) quotation", "D) query"],
+                translations: ["问题", "寻求", "引文", "查询"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 quotation 的概念所指知识。根据上下文只有 quotation 语义结合比较贴切，表示'引文'。",
+                source: 7
+            },
+            {
+                question: "46. In some ways, this man was the prime suspect because he had just been ______ from prison and fit the timeframe for this murder.",
+                options: ["A) leaked", "B) released", "C) surrendered", "D) dropped"],
+                translations: ["泄露", "释放", "投降", "掉落"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 release 的搭配模式知识。be released from 是固定搭配，表示'从……中释放'。",
+                source: 7
+            },
+            {
+                question: "47. That trend now looks almost certain to go into ______ in the next six months, even though the fall in prices seems unlikely to be dramatic.",
+                options: ["A) reverse", "B) reality", "C) reason", "D) rear"],
+                translations: ["反转", "现实", "原因", "后方"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 reverse 的搭配模式知识。go into reverse 是固定搭配，表示'反转'。",
+                source: 7
+            },
+            {
+                question: "48. ______ results indicate that this algorithm is effective and better than the traditional method based on adaptive filter.",
+                options: ["A) Stimulation", "B) Stabilization", "C) Simulation", "D) Signification"],
+                translations: ["刺激", "稳定", "模拟", "意义"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 simulation 的语境制约知识。simulation result 是常见的专业术语，意为'仿真结果、模拟结果'。",
+                source: 7
+            },
+            {
+                question: "49. By 2013, the company owed the lender about $35,000 per month—______ in interest payments—and collapsed in debt.",
+                options: ["A) individually", "B) wholly", "C) solely", "D) hardly"],
+                translations: ["个别地", "完全地", "仅仅", "几乎不"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 solely 的概念所指知识。根据上下文，只有 solely 语义结合比较贴切，表示'单独地、仅仅'。",
+                source: 7
+            },
+            {
+                question: "50. It was also found that in the experiment participants' attitudes were mixed and ______ negative, as they did not regard brain death as true death.",
+                options: ["A) someway", "B) somehow", "C) somewhere", "D) somewhat"],
+                translations: ["以某种方式", "不知何故", "在某处", "有点"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 somewhat 的概念所指知识。根据上下文，只有 somewhat 语义结合比较贴切，表示'有几分、稍微'。",
+                source: 7
+            },
+            {
+                question: "51. When ______ to the FDA, it was supposed to be labeled as a sweetener, because there was not a caloric penalty involved.",
+                options: ["A) deferred", "B) yielded", "C) retreated", "D) submitted"],
+                translations: ["延期", "屈服", "撤退", "提交"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 submit 的搭配模式知识。submit sth. to...是固定搭配，表示'将某物提交给……'。",
+                source: 7
+            },
+            {
+                question: "52. Perhaps it is better that hotels offer package deals through which visitors can visit all the talk-shows on three ______ nights.",
+                options: ["A) successive", "B) following", "C) alternating", "D) ensuing"],
+                translations: ["连续的", "接下来的", "交替的", "随之发生的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 successive 的语义联想知识。following 和 ensuing 表示'随后的'；alternating 表示'间隔的'。只有 successive 合适，表示'连续的'。",
+                source: 7
+            },
+            {
+                question: "53. That life would have to ______ on comparatively little oxygen and water, and would have to be very tolerant of methane.",
+                options: ["A) handle", "B) last", "C) remain", "D) survive"],
+                translations: ["处理", "持续", "保持", "生存"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 survive 的搭配模式知识。survive on 为固定搭配，表示'靠……生存'。",
+                source: 7
+            },
+            {
+                question: "54. In the meantime, the author hopes that this ______ can be helpful to other workers of scientific and technological management.",
+                options: ["A) contention", "B) thesis", "C) assumption", "D) proposition"],
+                translations: ["争论", "论文", "假设", "提议"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 thesis 的概念所指知识。contention 表示'争论、看法'；assumption 表示'假设'；proposition 表示'提议、建议'。只有 thesis 合适，表示'论文'。",
+                source: 7
+            },
+            {
+                question: "55. Remember if you decide to submit your website to a directory, make sure it's ______ topic, moderated, and well structured.",
+                options: ["A) on", "B) in", "C) with", "D) to"],
+                translations: ["关于", "在...里", "和", "到"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 topic 的搭配模式知识。on topic 为固定搭配，表示'切题'。",
+                source: 7
+            },
+            {
+                question: "56. Still much needs to be done as there have been few credible studies linking the ______ of the virus between animals and humans.",
+                options: ["A) transference", "B) transportation", "C) transmission", "D) transition"],
+                translations: ["转移", "运输", "传播", "过渡"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 transmission 的概念所指知识。transference 表示'转移、调任'；transportation 表示'交通运输'；transition 表示'过渡、转变'。只有 transmission 意义合适，表示'传播、传染'。",
+                source: 7
+            },
+            {
+                question: "57. The economists have no doubt that a portion of the debt will ______ need to be folded into a eurozone bond no matter what happens next year.",
+                options: ["A) ultimately", "B) basically", "C) exclusively", "D) occasionally"],
+                translations: ["最终", "基本地", "独家地", "偶尔"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 ultimately 的概念所指知识。根据上下文，只有 ultimately 语义结合比较贴切，表示'最终'。",
+                source: 7
+            },
+            {
+                question: "58. Eight of these nine types were common between rice and grain, whereas only one, known as F-type cycling, was unique ______ rice.",
+                options: ["A) to", "B) with", "C) on", "D) under"],
+                translations: ["对", "和", "在...上", "在...下"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 unique 的搭配模式知识。unique to 属于固定搭配，表示'（某人/某物）独有的、特有的'。",
+                source: 7
+            },
+            {
+                question: "59. After passing through the Earth's atmosphere, most of the sun's energy is in the form of ______ and ultraviolet light.",
+                options: ["A) striking", "B) clear", "C) evident", "D) visible"],
+                translations: ["引人注目的", "清晰的", "明显的", "可见的"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 visible 的语义联想知识。striking 表示'引人注目的'，clear 表示'清晰的'，evident 表示'显然的'。只有 visible 意义合适，表示'可见的'。",
+                source: 7
+            },
+            {
+                question: "60. Faced with the fact that ______ contributions produce an inadequate park, the neighborhood turns to taxes.",
+                options: ["A) spontaneous", "B) independent", "C) deliberate", "D) voluntary"],
+                translations: ["自发的", "独立的", "故意的", "自愿的"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 voluntary 的搭配模式知识。voluntary contribution 为固定搭配，表示'自愿捐款'。",
+                source: 7
+            }
+        ];
+
+        // 题库数据 - 子表8
+        const questionBank8 = [
+            {
+                question: "1. The study which was conducted by a research institute showed a deep fear among the elderly of being ______ to the care of strangers.",
+                options: ["A) rejected", "B) abandoned", "C) quitted", "D) withdrew"],
+                translations: ["拒绝", "抛弃", "退出", "撤回"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 abandon 的搭配模式知识。abandon sb. to 为固定搭配，表示'将某人遗弃到……'。",
+                source: 8
+            },
+            {
+                question: "2. Excessive preoccupation with one's own well-being and interests is usually ______ by an inflated sense of self-importance.",
+                options: ["A) co-occurred", "B) supplemented", "C) accompanied", "D) guided"],
+                translations: ["同时发生", "补充", "伴随", "引导"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 accompany 的概念所指知识。co-occur 表示'同时出现'，但为不及物动词；supplement 表示'增补'；guide 表示'指导，引路'。只有 accompany 意义合适，表示'伴随'，且是及物动词。",
+                source: 8
+            },
+            {
+                question: "3. Obesity is defined as the abnormal ______ of fat in the body's storage areas.",
+                options: ["A) accumulation", "B) distribution", "C) consumption", "D) reduction"],
+                translations: ["积累", "分布", "消耗", "减少"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 accumulation 的概念所指知识。题干句子是对于 obesity（肥胖）的定义，accumulation 表示'积累'，符合句意，其他选项意义不合适。",
+                source: 8
+            },
+            {
+                question: "4. The instructions were deliberately ______ to allow for flexibility in interpretation.",
+                options: ["A) specific", "B) detailed", "C) ambiguous", "D) explicit"],
+                translations: ["具体的", "详细的", "模棱两可的", "明确的"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 ambiguous 的概念所指知识。在四个选项中，只有 ambiguous（模棱两可的）与 non-specific 意思相近，另外根据后面的 uncertainty 和 indifference 也可推断只有 ambiguous 语义比较贴切。",
+                source: 8
+            },
+            {
+                question: "5. An ______ is supplementary material usually found at the end of a book.",
+                options: ["A) index", "B) abstract", "C) appendix", "D) reference"],
+                translations: ["索引", "摘要", "附录", "参考文献"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 appendix 的概念所指知识。题干是对于 appendix（附录）的定义。",
+                source: 8
+            },
+            {
+                question: "6. The president awarded him a medal ______ his outstanding contribution to science.",
+                options: ["A) in honor of", "B) in memory of", "C) in case of", "D) in appreciation of"],
+                translations: ["为纪念", "为纪念", "以防", "为感谢"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 appreciation 的搭配模式知识。in appreciation of 为固定搭配，表示'为……表示感谢'。",
+                source: 8
+            },
+            {
+                question: "7. The king's ______ decisions often ignored the advice of his council.",
+                options: ["A) arbitrary", "B) irrational", "C) subjective", "D) willful"],
+                translations: ["专制的", "不合理的", "主观的", "故意的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 arbitrary 的概念所指知识。irrational 表示'不合理的'；subjective 表示'主观的'；willful 表示'故意的，任性的'。只有 arbitrary 意义合适，表示'专制的'。",
+                source: 8
+            },
+            {
+                question: "8. The security system locks all doors ______ when the alarm is activated.",
+                options: ["A) repeatedly", "B) automatically", "C) unconsciously", "D) immediately"],
+                translations: ["重复地", "自动地", "不知不觉地", "立即"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 automatically 的概念所指知识。repeatedly 表示'重复地'；unconsciously 表示'不知不觉地'；immediately 表示'立即'。只有 automatically 意义合适，表示'自动地'。",
+                source: 8
+            },
+            {
+                question: "9. The study revealed a significant ______ against female candidates in hiring practices.",
+                options: ["A) preference", "B) favor", "C) inclination", "D) bias"],
+                translations: ["偏好", "偏爱", "倾向", "偏见"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 bias 的搭配模式知识。bias against...为固定搭配，表示'对于……的偏见'。",
+                source: 8
+            },
+            {
+                question: "10. The researcher used a flow ______ to illustrate the process of data collection.",
+                options: ["A) diagram", "B) table", "C) graph", "D) chart"],
+                translations: ["图表", "表格", "曲线图", "图表"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 chart 的概念所指知识。根据上下文，只有 chart 语义结合比较贴切，表示'图表'。",
+                source: 8
+            },
+            {
+                question: "11. The professor's explanation brought ______ to the complex theoretical concept.",
+                options: ["A) simplicity", "B) clarity", "C) precision", "D) transparency"],
+                translations: ["简单", "清晰", "精确", "透明"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 clarity 的概念所指知识。simplicity 表示'简单，容易'；precision 表示'精确'；transparency 表示'透明，透明度'。只有 clarity 意义合适，表示'清晰的思维（或理解）能力'。",
+                source: 8
+            },
+            {
+                question: "12. All products must be manufactured ______ international safety standards.",
+                options: ["A) in conformity with", "B) in accordance to", "C) in compliance of", "D) in agreement with"],
+                translations: ["遵循", "根据", "遵守", "同意"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 conformity 的搭配模式知识。in conformity with 为固定搭配，表示'遵循（规则），与……相符合（或一致）'。",
+                source: 8
+            },
+            {
+                question: "13. Fluctuations in ______ prices directly impact the economy of agricultural nations.",
+                options: ["A) stock", "B) currency", "C) property", "D) commodity"],
+                translations: ["股票", "货币", "财产", "商品"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 commodity 的搭配模式知识。commodity price 为常见的固定搭配，意为'商品价格'。",
+                source: 8
+            },
+            {
+                question: "14. The online resources serve as a valuable ______ to traditional textbooks.",
+                options: ["A) addition", "B) extension", "C) supplement", "D) complement"],
+                translations: ["增加", "扩展", "补充", "补充物"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 complement 的搭配模式知识。complement to...为固定搭配，表示'对……的补充'。",
+                source: 8
+            },
+            {
+                question: "15. ______ history typically covers events from the late 18th century to the present day.",
+                options: ["A) Ancient", "B) Medieval", "C) Contemporary", "D) Modern"],
+                translations: ["古代", "中世纪", "当代", "现代"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 contemporary 的概念所指知识。题干是对于现代史的定义。",
+                source: 8
+            },
+            {
+                question: "16. There was a clear ______ between the company's public statements and its actual practices.",
+                options: ["A) conflict", "B) contradiction", "C) contrast", "D) disagreement"],
+                translations: ["冲突", "矛盾", "对比", "分歧"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 contradiction 的搭配模式知识。contradiction between...and...为固定搭配，表示'……和……之间的矛盾'。",
+                source: 8
+            },
+            {
+                question: "17. Early diagnosis is ______ for the effective treatment of this disease.",
+                options: ["A) pressing", "B) touchy", "C) crucial", "D) desperate"],
+                translations: ["紧迫的", "棘手的", "至关重要的", "不顾一切的"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 crucial 的概念所指知识。pressing 表示'紧急的'；touchy 表示'敏感的，棘手的'；desperate 表示'不顾一切的'。只有 crucial 意义合适，表示'至关重要的'。",
+                source: 8
+            },
+            {
+                question: "18. The country decided to devalue its ______ to boost exports.",
+                options: ["A) currency", "B) economy", "C) treasury", "D) reserve"],
+                translations: ["货币", "经济", "国库", "储备"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 currency 的概念所指知识。题干是对于通货/货币的定义。",
+                source: 8
+            },
+            {
+                question: "19. In semiotics, a word's ______ meaning is different from its connotative meaning.",
+                options: ["A) indicate", "B) mean", "C) connote", "D) denote"],
+                translations: ["表明", "意味", "隐含", "表示"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 denote 的语义联想知识。虽然 indicate、mean 和 denote 意思相近，但与 connote 对应的是 denote。denote 表达的是字面意义，connote 表达的是隐含意义。",
+                source: 8
+            },
+            {
+                question: "20. The new testing method can identify defects not previously ______.",
+                options: ["A) discovered", "B) noticed", "C) observed", "D) detected"],
+                translations: ["发现", "注意到", "观察到", "查明"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 detected 的概念所指知识。根据上下文，只有 detected 语义结合比较贴切，表示'查明的'。",
+                source: 8
+            },
+            {
+                question: "21. Any ______ from the established protocol must be documented and justified.",
+                options: ["A) departure", "B) deviation", "C) diversion", "D) difference"],
+                translations: ["离开", "偏离", "转移", "差异"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 deviation 的搭配模式知识。deviation from...为固定搭配，表示'对于……的偏离'。",
+                source: 8
+            },
+            {
+                question: "22. Climate change has caused the ______ of many species from their natural habitats.",
+                options: ["A) displacement", "B) replacement", "C) removal", "D) substitution"],
+                translations: ["迁移", "替换", "移除", "代替"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 displacement 的概念所指知识。根据上下文只有 displacement 语义结合比较贴切，表示'迁移'。",
+                source: 8
+            },
+            {
+                question: "23. The invention brought about ______ improvements in production efficiency.",
+                options: ["A) powerful", "B) emotional", "C) dramatic", "D) vivid"],
+                translations: ["强大的", "情感的", "巨大的", "生动的"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 dramatic 的概念所指知识。powerful 表示'强大的，力量大的'；emotional 表示'感情的，有感染力的'；vivid 表示'生动的，鲜明的'。只有 dramatic 意义合适，表示'巨大的'。",
+                source: 8
+            },
+            {
+                question: "24. After numerous experiments, the team ______ discovered the solution.",
+                options: ["A) gradually", "B) eventually", "C) accidentally", "D) intentionally"],
+                translations: ["逐渐地", "最终", "偶然地", "故意地"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 eventually 的概念所指知识。根据上下文，只有 eventually 语义结合比较贴切，表示'最终'。",
+                source: 8
+            },
+            {
+                question: "25. The patient began to ______ symptoms of recovery after the new treatment.",
+                options: ["A) illustrate", "B) feature", "C) exhibit", "D) advertise"],
+                translations: ["说明", "以...为特征", "显示", "宣传"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 exhibit 的概念所指知识。illustrate 表示'解释，加插图'；feature 表示'以……为特征'；advertise 表示'做广告，宣传'。只有 exhibit 意义合适，表示'显示，表现'。",
+                source: 8
+            },
+            {
+                question: "26. Sustainable ______ of natural resources is essential for environmental protection.",
+                options: ["A) consumption", "B) utilization", "C) exploration", "D) exploitation"],
+                translations: ["消耗", "利用", "探索", "开发"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 exploitation 的概念所指知识。题干是对于自然资源开发（exploitation）的定义。",
+                source: 8
+            },
+            {
+                question: "27. Investors are concerned about the constant ______ in the stock market.",
+                options: ["A) variation", "B) alteration", "C) modification", "D) fluctuation"],
+                translations: ["变化", "改变", "修改", "波动"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 fluctuation 的语境制约知识。market fluctuation 意为'市场波动'，为常见的专业术语。",
+                source: 8
+            },
+            {
+                question: "28. The organization issued new ______ for ethical research practices.",
+                options: ["A) guidelines", "B) principles", "C) rules", "D) standards"],
+                translations: ["准则", "原则", "规则", "标准"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 guideline 的概念所指知识。根据上下文只有 guideline 语义结合比较贴切，表示'准则，指南'。",
+                source: 8
+            },
+            {
+                question: "29. The report ______ the urgent need for educational reform.",
+                options: ["A) introduced", "B) featured", "C) explained", "D) highlighted"],
+                translations: ["介绍", "以...为特色", "解释", "强调"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 highlight 的概念所指知识。introduce 表示'介绍'，feature 表示'以……为特征'，explain 表示'解释'。只有 highlight 意义合适，表示'强调，突出'。",
+                source: 8
+            },
+            {
+                question: "30. ______ learning occurs without conscious awareness of what has been learned.",
+                options: ["A) Explicit", "B) Conscious", "C) Implicit", "D) Intentional"],
+                translations: ["外显的", "有意识的", "内隐的", "有意的"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 implicit 的概念所指知识。题干是对内含/内隐学习（implicit learning）的定义。",
+                source: 8
+            },
+            {
+                question: "31. The medication may ______ drowsiness as a side effect.",
+                options: ["A) urge", "B) convince", "C) induce", "D) promote"],
+                translations: ["敦促", "说服", "导致", "促进"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 induce 的概念所指知识。urge 表示'敦促'；convince 表示'说服，使相信'；promote 表示'推动'。只有 induce 意义合适，表示'导致'。",
+                source: 8
+            },
+            {
+                question: "32. Technological advancements will ______ change the nature of work in the coming decades.",
+                options: ["A) possibly", "B) potentially", "C) likely", "D) inevitably"],
+                translations: ["可能", "潜在地", "可能地", "不可避免地"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 inevitably 的概念所指知识。根据上下文，只有 inevitably 语义结合比较贴切，表示'不可避免地，必然地'。",
+                source: 8
+            },
+            {
+                question: "33. The country invested heavily in its transportation ______ to boost economic growth.",
+                options: ["A) foundation", "B) framework", "C) infrastructure", "D) structure"],
+                translations: ["基础", "框架", "基础设施", "结构"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 infrastructure 的概念所指知识。题干是对'基础设施（infrastructure）'的定义。",
+                source: 8
+            },
+            {
+                question: "34. ______ on close ______, the painting was found to be a forgery.",
+                options: ["A) On...examination", "B) Under...review", "C) After...analysis", "D) On...inspection"],
+                translations: ["仔细检查", "审查下", "分析后", "仔细查看"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 inspection 的搭配模式知识。on close inspection 为固定搭配，表示'仔细查看'。",
+                source: 8
+            },
+            {
+                question: "35. The ______ of the earthquake caused widespread damage in the region.",
+                options: ["A) anxiety", "B) vitality", "C) severity", "D) intensity"],
+                translations: ["焦虑", "生命力", "严重性", "强度"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 intensity 的概念所指知识。anxiety 表示'焦虑'，vitality 表示'生命力'，severity 表示'严重性'。只有 intensity 意义合适，表示'强度'。",
+                source: 8
+            },
+            {
+                question: "36. ______ of market prices through false information is illegal in most countries.",
+                options: ["A) Manipulation", "B) Regulation", "C) Control", "D) Management"],
+                translations: ["操纵", "监管", "控制", "管理"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 manipulation 的概念所指知识。题干是对市场操纵（market manipulation）的定义。",
+                source: 8
+            },
+            {
+                question: "37. Companies are developing new technologies to ______ environmental impact.",
+                options: ["A) reduce", "B) minimise", "C) decrease", "D) diminish"],
+                translations: ["减少", "最小化", "降低", "缩小"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 minimise 的概念所指知识。根据上下文，只有 minimise 语义结合比较贴切，表示'将……最小化'。",
+                source: 8
+            },
+            {
+                question: "38. The country's ______ capability has been a subject of international concern.",
+                options: ["A) atomic", "B) nuclear", "C) radioactive", "D) fission"],
+                translations: ["原子的", "核的", "放射性的", "裂变的"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 nuclear 的语境制约知识。nuclear capability，表示'核能力'，是常见的术语。",
+                source: 8
+            },
+            {
+                question: "39. The company used profits from its export division to ______ losses in the domestic market.",
+                options: ["A) balance", "B) offset", "C) compensate", "D) counter"],
+                translations: ["平衡", "抵消", "补偿", "对抗"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 offset 的搭配模式知识。offset...against...为固定搭配，表示'用……对……进行抵消，补偿'。",
+                source: 8
+            },
+            {
+                question: "40. Each ______ of the article should focus on a single main idea.",
+                options: ["A) information", "B) paragraph", "C) component", "D) element"],
+                translations: ["信息", "段落", "成分", "要素"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 paragraph 的概念所指知识。information 表示'信息'，component 表示'成分'，element 表示'要素'。只有 paragraph 意义合适，表示'段落'。",
+                source: 8
+            },
+            {
+                question: "41. ______, the new policy has increased employment opportunities in the region.",
+                options: ["A) On the contrary", "B) In contrast", "C) On the plus side", "D) Conversely"],
+                translations: ["相反", "对比之下", "好的一面", "相反地"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 plus 的搭配模式知识。on the plus side 为固定搭配，表示'好的一面'。",
+                source: 8
+            },
+            {
+                question: "42. As a licensed acupuncture ______, she treats patients using traditional Chinese medicine techniques.",
+                options: ["A) specialist", "B) expert", "C) therapist", "D) practitioner"],
+                translations: ["专家", "专家", "治疗师", "从业者"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 practitioner 的语境制约知识。acupuncture practitioner 意为'针灸从业人员'，为常见医学术语。",
+                source: 8
+            },
+            {
+                question: "43. The population in this area is ______ elderly, with over 60% aged 65 or older.",
+                options: ["A) predominantly", "B) abundantly", "C) imposingly", "D) excessively"],
+                translations: ["主要地", "充裕地", "壮观地", "过度地"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 predominantly 的语义联想知识。abundantly 表示'充裕地'，imposingly 表示'壮观地'，excessively 表示'过度地'。只有 predominantly 意义合适，表示'主要地'。",
+                source: 8
+            },
+            {
+                question: "44. With several major contracts ______, the company's future looks promising.",
+                options: ["A) in prospect", "B) in view", "C) in sight", "D) in mind"],
+                translations: ["展望", "在视野中", "在视线内", "在心中"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 prospect 的搭配模式知识。in prospect 为固定搭配，表示'展望，可以预料到'。",
+                source: 8
+            },
+            {
+                question: "45. The new management promised ______ changes to the company's organizational structure.",
+                options: ["A) natural", "B) severe", "C) radical", "D) primitive"],
+                translations: ["自然的", "严峻的", "根本的", "原始的"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 radical 的概念所指知识。natural 表示'自然的'，severe 表示'严峻的'，primitive 表示'原始的'。只有 radical 意义合适，表示'根本的，彻底的'。",
+                source: 8
+            },
+            {
+                question: "46. Participants for the study were selected ______ from the general population.",
+                options: ["A) by chance", "B) by choice", "C) at will", "D) at random"],
+                translations: ["偶然", "选择", "随意", "随机"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 random 的搭配模式知识。at random 为固定搭配，表示'随意，随机'。",
+                source: 8
+            },
+            {
+                question: "47. The success of the initial project helped to ______ the team's confidence.",
+                options: ["A) increase", "B) reinforce", "C) strengthen", "D) enhance"],
+                translations: ["增加", "加强", "加强", "提高"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 reinforce 的概念所指知识。根据上下文只有 reinforce 语义结合比较贴切，表示'加强'。",
+                source: 8
+            },
+            {
+                question: "48. After the renovation, the historical building was ______ to its original grandeur.",
+                options: ["A) renewed", "B) restored", "C) renovated", "D) refreshed"],
+                translations: ["更新", "恢复", "修复", "刷新"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 restore 的语义联想知识。renew 意为'更新'；renovate 意为'修复，革新'；refresh 意为'刷新，使……恢复（精力）'；restore 指'恢复（到原来的状态）'。",
+                source: 8
+            },
+            {
+                question: "49. The proposal underwent several ______ before final approval.",
+                options: ["A) versions", "B) editions", "C) revisions", "D) modifications"],
+                translations: ["版本", "版次", "修改", "改动"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 revision 的概念所指知识。根据上下文，只有 revision 语义结合比较贴切，表示'修改，修订'。",
+                source: 8
+            },
+            {
+                question: "50. The project was completed ______, much to the satisfaction of the stakeholders.",
+                options: ["A) ahead of schedule", "B) on schedule", "C) behind schedule", "D) with schedule"],
+                translations: ["提前", "按时", "延迟", "按计划"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 schedule 的搭配模式知识。ahead of schedule 为固定搭配，表示'提前'。",
+                source: 8
+            },
+            {
+                question: "51. The ______ between the two neighboring countries has eased following diplomatic talks.",
+                options: ["A) balance", "B) rigidity", "C) tension", "D) concern"],
+                translations: ["平衡", "僵化", "紧张", "关心"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 tension 的概念所指知识。balance 表示'平衡'；rigidity 表示'僵化'；concern 表示'担心，关心'。只有 tension 意义合适，表示'紧张（局势）'。",
+                source: 8
+            },
+            {
+                question: "52. The ______ of the contract was due to failure to meet the agreed-upon terms.",
+                options: ["A) suspension", "B) pause", "C) termination", "D) cessation"],
+                translations: ["暂停", "暂停", "终止", "停止"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 termination 的概念所指知识。根据上下文，只有 termination 语义结合比较贴切，表示'终止'。",
+                source: 8
+            },
+            {
+                question: "53. The central ______ of the conference was sustainable development in urban areas.",
+                options: ["A) topic", "B) subject", "C) theme", "D) issue"],
+                translations: ["话题", "主题", "主题", "问题"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 theme 的概念所指知识。题干是对主题/中心思想（theme）的定义。",
+                source: 8
+            },
+            {
+                question: "54. The new tax law reduces corporate rates, ______ encouraging business investment.",
+                options: ["A) therefore", "B) thus", "C) thereby", "D) hence"],
+                translations: ["因此", "因此", "由此", "因此"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 thereby 的概念所指知识。根据上下文只有 thereby 语义结合比较贴切，表示'由此'。",
+                source: 8
+            },
+            {
+                question: "55. All medical staff are required to wear proper ______ in the operating room.",
+                options: ["A) suit", "B) gown", "C) uniform", "D) wear"],
+                translations: ["西装", "礼服", "制服", "服装"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 uniform 的语义联想知识。suit 表示'西装'；gown 表示'礼服，长袍'；wear 通常用于构成合成词，表示特定场合服装。只有 uniform 意义合适，表示'制服'。",
+                source: 8
+            },
+            {
+                question: "56. Electric bicycles have become a popular ______ of transportation in many cities.",
+                options: ["A) tool", "B) vehicle", "C) device", "D) equipment"],
+                translations: ["工具", "交通工具", "装置", "设备"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 vehicle 的概念所指知识。题干是对交通工具（vehicle）的定义。",
+                source: 8
+            },
+            {
+                question: "57. The data was transmitted ______ satellite to remote research stations.",
+                options: ["A) through", "B) by", "C) via", "D) with"],
+                translations: ["通过", "通过", "经由", "用"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 via 的概念所指知识。根据上下文只有 via 语义结合比较贴切，表示'经由'。",
+                source: 8
+            },
+            {
+                question: "58. The two theories are ______ identical in their predictions.",
+                options: ["A) practically", "B) nearly", "C) virtually", "D) almost"],
+                translations: ["实际地", "几乎", "实际上", "几乎"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 virtually 的概念所指知识。根据上下文，只有 virtually 语义结合比较贴切，表示'实际上'。",
+                source: 8
+            },
+            {
+                question: "59. There is ______ support for stricter environmental regulations.",
+                options: ["A) widespread", "B) epidemic", "C) comprehensive", "D) infinite"],
+                translations: ["广泛的", "泛滥的", "全部的", "无限的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 widespread 的语义联想知识。epidemic 表示'泛滥的'，comprehensive 表示'全部的'，infinite 表示'无限的'。只有 widespread 意义合适，表示'普通的，广泛的'。",
+                source: 8
+            },
+            {
+                question: "60. The software converts numerical data into ______ representations for easier analysis.",
+                options: ["A) visible", "B) optical", "C) visual", "D) observable"],
+                translations: ["可见的", "光学的", "视觉的", "可观察的"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 visual 的语境制约知识。visual information 意为'视觉信息'，为专业术语。",
+                source: 8
+            }
+        ];
+
+        // 题库数据 - 子表9 (source:9)
+        const questionBank9 = [
+            {
+                question: "1. The space released in Senate House will provide some much-needed additional office ______ for several newly elected members.",
+                options: ["A) settlement", "B) discrimination", "C) accommodation", "D) transmission"],
+                translations: ["定居；解决", "歧视；区别对待", "办公空间；住所", "传输；传递"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 accommodation 的概念所指知识。从上下文可以了解：腾出来的空间只可能作为办公空间（accommodation）。其他选项都不合适。",
+                source: 9
+            },
+            {
+                question: "2. Genetic recombination is analogous ______ the process of producing one functional motor car by combining the engine from one broken-down car with the gearbox from another.",
+                options: ["A) to", "B) in", "C) by", "D) of"],
+                translations: ["到；向", "在……里面", "通过；由", "……的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 analogous 的搭配模式知识。analogous to 是固定搭配，意为'类同于'。",
+                source: 9
+            },
+            {
+                question: "3. The proportion of the over 65s has increased rather dramatically, although not as much as was once ______.",
+                options: ["A) hoped", "B) awaited", "C) prospected", "D) anticipated"],
+                translations: ["希望", "等待；期待", "勘探；勘察", "预料；预期"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 anticipate 的语义联想知识。anticipate: 指对未来状况的预计。",
+                source: 9
+            },
+            {
+                question: "4. Excellent preservice teacher education programs give ______ to the qualification of teachers in schools and help to improve the education quality.",
+                options: ["A) pressure", "B) assurance", "C) credibility", "D) insight"],
+                translations: ["压力", "保证；担保", "可信度；公信力", "洞察力；深刻见解"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 assurance 的概念所指知识。assurance 意为'保证'，符合语义。题干意思：好的教师职前培训能保障学校教师的质量，有助于提高教育质量。",
+                source: 9
+            },
+            {
+                question: "5. It will only be when local female populations ______ the same educational standard as their male counterparts and take a key role in management decisions that substantial progress will be made.",
+                options: ["A) fulfill", "B) realize", "C) complete", "D) attain"],
+                translations: ["履行；实现", "意识到；实现", "完成；结束", "达到；获得"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 attain 的搭配模式知识。attain standard 是固定搭配，意为'达到标准'，符合语义。",
+                source: 9
+            },
+            {
+                question: "6. The solicitor acting on ______ of the purchaser will have the opportunity to examine the conditions prior to exchange of contracts.",
+                options: ["A) average", "B) behalf", "C) top", "D) relation"],
+                translations: ["平均", "代表", "顶部", "关系"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 behalf 的搭配模式知识。on behalf of 意为'代表'，为固定搭配。'代表买方的律师'是常用的职场用法。",
+                source: 9
+            },
+            {
+                question: "7. Some customers believe that buying in ______ is more economical than shopping for small quantities.",
+                options: ["A) bulk", "B) group", "C) disguise", "D) outlet"],
+                translations: ["大批；大量", "组；团体", "伪装；掩饰", "出口； outlets 商店"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 bulk 的概念所指知识。句意：有些消费者认为大量购买会比少量购买省钱。in bulk 意为'成批，大批'，符合语义。",
+                source: 9
+            },
+            {
+                question: "8. As Yeltsin (叶利钦，俄罗斯首位总统) never ______ to point out, he is the one who has been legitimized by the Russian people in free elections, not parliament.",
+                options: ["A) devotes", "B) figures", "C) ceases", "D) refers"],
+                translations: ["奉献；致力于", "计算；认为", "停止；终止", "提到；涉及"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 cease 的概念所指知识。never cease to do 意为'频繁地做，没有停止做'（夸张用语）。",
+                source: 9
+            },
+            {
+                question: "9. The chief property of poetry is ______, not of a logical kind, but consisting in the harmonization of conflicting meanings or attitudes.",
+                options: ["A) coincidence", "B) commerce", "C) conscience", "D) coherence"],
+                translations: ["巧合；一致", "商业；贸易", "良心；良知", "连贯性；一致性"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 coherence 的概念所指知识。coherence（连贯性）是文章写作的基本要求。",
+                source: 9
+            },
+            {
+                question: "10. The publication of Angell’s book coincided ______ the triumph of a campaign to abolish slavery in the Congo.",
+                options: ["A) from", "B) with", "C) above", "D) behind"],
+                translations: ["从……", "与……一致", "在……之上", "在……后面"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 coincide 的搭配模式知识。coincide with 是固定搭配，其他选项不合适。",
+                source: 9
+            },
+            {
+                question: "11. In 1816 the Leith and Hamburg Shipping Company ______ operations and in 1936 the two companies merged to form the Hull and Leith Steam Packet Company.",
+                options: ["A) restrained", "B) suspended", "C) commenced", "D) processed"],
+                translations: ["限制；约束", "暂停；中止", "开始；着手", "处理；加工"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 commence 的概念所指知识。从上下文推断，两家公司先各自'开始'（commence）运作然后合并，其他选项意思不对。",
+                source: 9
+            },
+            {
+                question: "12. In these poor regions, early marriage is clearly ______ with the formal schooling of women; the more educated the woman, the less likely she is to have ever married.",
+                options: ["A) incompatible", "B) unfriendly", "C) improper", "D) mismatched"],
+                translations: ["不相容的；矛盾的", "不友好的", "不合适的", "不匹配的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 incompatible 的概念所指知识。incompatible 意为'矛盾的，不相容的'，符合句意。",
+                source: 9
+            },
+            {
+                question: "13. He was imprisoned for two ______ terms of 18 months and 30 months for robbing a shop and assaulting the shopkeeper.",
+                options: ["A) concurrent", "B) bicurrent", "C) recurrent", "D) current"],
+                translations: ["同时发生的", "双电流的（不存在此词）", "反复出现的", "当前的；流通的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 concurrent 的概念所指知识。concurrent 意为'同时进行的'；current 意为'当前的，流通的'；bicurrent 是不存在的词；recurrent 意为'一再发生的，复发的，反复出现的'。",
+                source: 9
+            },
+            {
+                question: "14. In this discussion, I will ______ myself to discussing examples of sexism from the English language, though of course it exists and has been analyzed in other languages too.",
+                options: ["A) imprison", "B) prevent", "C) confine", "D) deprive"],
+                translations: ["监禁；关押", "阻止；防止", "限制；限定", "剥夺；使丧失"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 confine 的概念所指知识。confine to 意为'限制，限定'。",
+                source: 9
+            },
+            {
+                question: "15. The president’s decision has caused considerable ______ and been criticized as an excessive response to the problem.",
+                options: ["A) conflict", "B) debate", "C) argument", "D) controversy"],
+                translations: ["冲突；矛盾", "辩论；争论", "论点；争论", "争议；论战"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 controversy 的语义联想知识。controversy：指深刻的意见分歧，多指对引起广泛兴趣或非常重要的问题的辩论。",
+                source: 9
+            },
+            {
+                question: "16. People who are driven to climb corporate ladders have parents who believe ladder climbing is important. ______, people who search in their careers for stability and structure acquire these values in their childhood.",
+                options: ["A) Similarly", "B) Conversely", "C) Especially", "D) Particularly"],
+                translations: ["同样地", "相反地", "尤其；特别", "特别；尤其"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 conversely 的概念所指知识。从上下文可以看出是语义的转折，只有 conversely 可以表达转折。",
+                source: 9
+            },
+            {
+                question: "17. So-called biometric security ______ such as finger scanners are considered safer; they check finger prints to authenticate a person’s identity before it is possible to gain entry to the system.",
+                options: ["A) devices", "B) tools", "C) implements", "D) appliances"],
+                translations: ["装置；设备", "工具；用具", "工具；器具（尤指农具）", "器具；电器（尤指家用）"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 device 的语义联想知识。device：多指为某一特殊用途或解决某一特定机械问题而设计或改装的精巧的仪器或装置。",
+                source: 9
+            },
+            {
+                question: "18. She has in recent years been able to ______ more time to dressmaking and tailoring — arts which she has perfected to professional standards.",
+                options: ["A) focus", "B) devote", "C) center", "D) addict"],
+                translations: ["集中；聚焦", "奉献；投入", "以……为中心", "使沉迷；使上瘾"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 devote 的搭配模式知识。在这几个词中，只有 devote 与 time 搭配合适。",
+                source: 9
+            },
+            {
+                question: "19. The Act aimed to reinforce rather than to ______ parental responsibility by requiring the presence of parents in court and by increasing the courts’ powers to require parents to pay fines for their children’s offences.",
+                options: ["A) destroy", "B) enhance", "C) diminish", "D) increase"],
+                translations: ["破坏；摧毁", "增强；提高", "减少；削弱", "增加；提高"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 diminish 的概念所指知识。能与 reinforce 在上下文中形成反义词的只有 diminish。",
+                source: 9
+            },
+            {
+                question: "20. The present system seriously ______ consumers’ choice by depressing sales of Scotch whisky and encouraging the sales of other drinks.",
+                options: ["A) caters", "B) fakes", "C) wrecks", "D) distorts"],
+                translations: ["迎合；满足", "伪造；假装", "破坏； wreck 的过去式", "扭曲；歪曲"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 distort 的概念所指知识。distort 本意为'使变形，使扭曲'，在本句中的引申义为'使改变，使不真实'。",
+                source: 9
+            },
+            {
+                question: "21. The ______ of copyright may be extended across the European Community to a uniform seventy years from the year of death of the artist or author.",
+                options: ["A) application", "B) inspection", "C) duration", "D) solution"],
+                translations: ["申请；应用", "检查；检验", "持续时间；期限", "解决；解决方案"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 duration 的概念所指知识。根据上下文意思，版权将在艺术家或作者去世70年内持续有效，只有 duration 合适。",
+                source: 9
+            },
+            {
+                question: "22. The immediate priority is to stop these downward pressures and avoid any further ______ of confidence in the stability of the financial system in advanced countries.",
+                options: ["A) format", "B) erosion", "C) medium", "D) device"],
+                translations: ["格式；版式", "侵蚀；削弱", "媒介；中等的", "装置；设备"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 erosion 的概念所指知识。erosion 的引申意为'（权威、权利、信心等的）逐渐丧失，削弱'。",
+                source: 9
+            },
+            {
+                question: "23. As well as raising ______ and moral issues, such a policy might reduce further the provision of beds in intensive care units for patients with illness from which they may recover.",
+                options: ["A) cultural", "B) ethical", "C) traditional", "D) federal"],
+                translations: ["文化的", "伦理的；道德的", "传统的", "联邦的"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 ethical 的语境制约知识。ethical and moral 意为'伦理道德'。",
+                source: 9
+            },
+            {
+                question: "24. The final records may exist ______ paper format, while the sources and the evidence for the process of document development are electronic.",
+                options: ["A) by", "B) of", "C) to", "D) in"],
+                translations: ["通过", "……的", "到", "以……形式"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 format 的搭配模式知识。in...format 是固定搭配，其他选项不合适。",
+                source: 9
+            },
+            {
+                question: "25. The club was ______ in 1968 to foster understanding of the economic, political, religious and social factors that shape today’s world, and to bring that new understanding to the attention of policy-makers and the public worldwide.",
+                options: ["A) constructed", "B) erected", "C) founded", "D) established"],
+                translations: ["建造；构造", "竖立；搭建", "创立；创办", "建立；设立"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 found 的语义联想知识。创办俱乐部用 found 才合适。",
+                source: 9
+            },
+            {
+                question: "26. Our results demonstrate the risks ______ in using present vegetation-climate relationships to reconstruct past climates from pollen or fossil records without incorporating potential direct effects of CO₂.",
+                options: ["A) inherent", "B) natural", "C) organic", "D) objective"],
+                translations: ["内在的；固有的", "自然的；天然的", "有机的；组织的", "客观的；目标的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 inherent 的概念所指知识。inherent 表示'内在的，固有的'。",
+                source: 9
+            },
+            {
+                question: "27. The course has been designed to ______ an insight into mutual support and team-building and is attended by both junior and senior levels of the company.",
+                options: ["A) establish", "B) conduct", "C) attain", "D) provide"],
+                translations: ["建立；确立", "实施；管理", "达到；获得", "提供；给予"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 insight 的搭配模式知识。provide...insight 是固定搭配，其他选项不合适。",
+                source: 9
+            },
+            {
+                question: "28. Fieldwork, both at home and abroad, forms a/an ______ part of the course, and there is also an opportunity to gain experience of survey techniques, data analysis, and computing.",
+                options: ["A) complete", "B) entire", "C) integral", "D) indispensable"],
+                translations: ["完整的；彻底的", "全部的；整个的", "必需的；不可缺少的", "不可或缺的"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 integral 的语义联想知识。integral 指'必需的，不可缺少的'。",
+                source: 9
+            },
+            {
+                question: "29. Beginners may not find the website useful as it is intended for ______ and advanced French-language students and teachers.",
+                options: ["A) intermediate", "B) middle", "C) difficult", "D) foundational"],
+                translations: ["中级的", "中间的", "困难的", "基础的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 intermediate 的概念所指知识。intermediate 意为'中级的'，与 advanced（高级的）是表示学习者水平的表达。",
+                source: 9
+            },
+            {
+                question: "30. ______ work is physical work done by people, most especially in contrast to that done by machines, and to that done by working animals.",
+                options: ["A) Automatic", "B) Manual", "C) Artistic", "D) Original"],
+                translations: ["自动的", "手工的；体力的", "艺术的", "原始的；独创的"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 manual 的概念所指知识。题干是 manual work（体力劳动）的定义。",
+                source: 9
+            },
+            {
+                question: "31. It is now possible for ______ students, who would be 23 or over, to study to general degree level over a wide range of subjects entirely in the part-time evening mode.",
+                options: ["A) elder", "B) adult", "C) mature", "D) ripen"],
+                translations: ["年长的（指人）", "成年的", "成熟的；成年的", "成熟（动词）"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 mature 的语义联想知识。mature students 指年纪稍比其他学生大一点的、有一定挣钱能力的学生。",
+                source: 9
+            },
+            {
+                question: "32. ______ is much less formal than going to court, but the conflict resolution process does involve distinct stages designed to lead to a mutually beneficial compromise.",
+                options: ["A) Allocation", "B) Mediation", "C) Innovation", "D) Transition"],
+                translations: ["分配；配置", "调解；调停", "创新；革新", "过渡；转变"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 mediation 的概念所指知识。mediation 意为'调停，调解'，符合上下文。",
+                source: 9
+            },
+            {
+                question: "33. For towns of ______ size a big stake in the woollen textile industry was the surest foundation of prosperity.",
+                options: ["A) medium", "B) average", "C) ordinary", "D) common"],
+                translations: ["中等的", "平均的", "普通的", "常见的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 medium 的语义联想知识。medium：指按照某种标准来说是适中或中等的。",
+                source: 9
+            },
+            {
+                question: "34. The government had announced on Jan. 4 that ______ service was to be reduced from 18 to 12 months.",
+                options: ["A) troop", "B) combat", "C) force", "D) military"],
+                translations: ["军队（复数）", "战斗；格斗", "力量；军队", "军事的；军队的"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 military 的搭配模式知识。military service（兵役）是固定搭配。",
+                source: 9
+            },
+            {
+                question: "35. The particles are put into a vacuum with a/an ______ amount of heat, which turns the ice into steam, leaving the ground particles dry and ready for use.",
+                options: ["A) abstract", "B) minimal", "C) symbolic", "D) potential"],
+                translations: ["抽象的", "最小的；极少的", "象征性的", "潜在的"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 minimal 的概念所指知识。根据上下文，只可能用 minimal 与 amount 搭配来描述热量。",
+                source: 9
+            },
+            {
+                question: "36. From 1932 onward, a deep ______ respect and musical understanding developed between these artists, and shone in everything they did together through to their final joint concert in Gothenburg on August 5th, 1960.",
+                options: ["A) mutual", "B) common", "C) joint", "D) corporate"],
+                translations: ["相互的；共同的", "常见的；共同的", "共同的；联合的", "公司的；团体的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 mutual 的语义联想知识。mutual：着重彼此共有或共享，局限于双方的关系。",
+                source: 9
+            },
+            {
+                question: "37. If Sunday working ______ the norm across the economy, the whole concept of the weekend, unsocial hours and premium pay, would be under threat as Sunday would be seen by more and more employers as a normal working day.",
+                options: ["A) managed", "B) sought", "C) became", "D) undertook"],
+                translations: ["管理；设法", "寻找；寻求", "成为；变得", "承担；从事"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 norm 的搭配模式知识。become the norm 意为'成为标准，成为常态'，是固定搭配。",
+                source: 9
+            },
+            {
+                question: "38. The language of science overlaps ______ that of ordinary life, but words like 'field', 'elementary' and 'family' came to be used in the later nineteenth century in rather different senses in physics, chemistry and biology.",
+                options: ["A) to", "B) among", "C) from", "D) with"],
+                translations: ["到", "在……之间", "从……", "与……重叠"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 overlap 的搭配模式知识。overlap with 是固定搭配，其他选项不合适。",
+                source: 9
+            },
+            {
+                question: "39. Up to now the police have played a ______ role with the hippies, preferring to keep a watchful eye on them.",
+                options: ["A) submissive", "B) dormant", "C) rigid", "D) passive"],
+                translations: ["顺从的；服从的", "休眠的；潜伏的", "严格的；僵硬的", "被动的；消极的"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 passive 的概念所指知识。passive 意为'被动的，听之任之的'，适合上下文意思。",
+                source: 9
+            },
+            {
+                question: "40. If a computer spends a significant ______ of its time in carrying out a particular sequence of steps, then performance could be improved by replacing these steps by a single instruction implemented as a microprogram.",
+                options: ["A) fragment", "B) portion", "C) share", "D) piece"],
+                translations: ["碎片；片段", "部分；份额", "份额；股份", "块；片"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 portion 的语义联想知识。portion：侧重于从整体中所分配到的那一部分，含一定的独立意义。",
+                source: 9
+            },
+            {
+                question: "41. ______ results have shown good differentiation between science texts and general texts; although to what level of detail this can be applied remains unspecified.",
+                options: ["A) Preliminary", "B) Selected", "C) Internal", "D) Brief"],
+                translations: ["初步的；预备的", "挑选的", "内部的", "简短的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 preliminary 的概念所指知识。preliminary result 意为'初步结果'。",
+                source: 9
+            },
+            {
+                question: "42. On Oct. 21 Italy and Algeria signed a three-year ______ on co-operation in television and radio broadcasting, covering training, technical assistance, coproductions and exchange of programs.",
+                options: ["A) announcement", "B) instruction", "C) protocol", "D) lease"],
+                translations: ["公告；宣告", "指令；教学", "协议；草案", "租约；租赁"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 protocol 的概念所指知识。表达'签署草案'，应是 sign a protocol。",
+                source: 9
+            },
+            {
+                question: "43. In marketing management, ______ research aims to find out people’s opinions and feelings rather than information that can easily be shown in numbers.",
+                options: ["A) alternative", "B) qualitative", "C) distinctive", "D) passive"],
+                translations: ["替代的；可供选择的", "定性的；质的", "独特的；有区别的", "被动的；消极的"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 qualitative 的语境制约知识。qualitative research（定性研究）符合上下文意思。",
+                source: 9
+            },
+            {
+                question: "44. If something such as a process, theory, or machine is ______, it is improved by having small changes made to it.",
+                options: ["A) purified", "B) cultivated", "C) filtered", "D) refined"],
+                translations: ["净化；提纯", "培养；耕作", "过滤；渗透", "改进；精炼"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 refine 的语义联想知识。refine 意为'改进，改善，改良'。",
+                source: 9
+            },
+            {
+                question: "45. More recently, pediatric surgeons have ______ these criteria, such that very few infants would now be denied surgical treatment.",
+                options: ["A) resolved", "B) tightened", "C) relaxed", "D) crushed"],
+                translations: ["解决；决定", "使变紧；加强", "放宽；放松", "压碎；镇压"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 relax 的概念所指知识。根据上下文意思，应该是'放宽标准'使得更多的孩子能获得手术治疗。",
+                source: 9
+            },
+            {
+                question: "46. With open frontiers and lax visa controls, criminals could cross into the country ______ restraint.",
+                options: ["A) without", "B) against", "C) among", "D) between"],
+                translations: ["没有；无", "反对；逆", "在……之中", "在……之间"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 restraint 的搭配模式知识。without restraint 意为'无拘无束地，自由地'，是固定搭配。",
+                source: 9
+            },
+            {
+                question: "47. In the 19th century the invention of the steam engine and steam turbine helped power the Industrial ______.",
+                options: ["A) Uprising", "B) Revolution", "C) Change", "D) Overthrow"],
+                translations: ["起义；暴动", "革命", "变化", "推翻；打倒"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 revolution 的搭配模式知识。Industrial Revolution 指'（英国）工业革命'，是固定搭配。",
+                source: 9
+            },
+            {
+                question: "48. Social class is more important and more ______ in many foreign countries, e.g. the Indian caste system (印度种姓制度).",
+                options: ["A) flexible", "B) straight", "C) rigid", "D) serious"],
+                translations: ["灵活的", "直的；正直的", "严格的；僵硬的", "严肃的；严重的"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 rigid 的概念所指知识。rigid 指'（规则、方法等）死板的，没有灵活性、机动性的'。",
+                source: 9
+            },
+            {
+                question: "49. Within easy reach of the town centre and on a frequent bus ______, Wexford House stands in a large garden which will afford a pleasant area for future residents.",
+                options: ["A) route", "B) path", "C) lane", "D) trail"],
+                translations: ["路线；航线", "小路；小径", "小巷；车道", "小径；踪迹"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 route 的语义联想知识。route：指从此处通往彼此的路线、路程等。",
+                source: 9
+            },
+            {
+                question: "50. After a 2-month strike of government workers, the more likely ______ is that the president will resign and an election will be held.",
+                options: ["A) diagnosis", "B) function", "C) challenge", "D) scenario"],
+                translations: ["诊断；判断", "功能；作用", "挑战；艰巨任务", "设想；可能发生的情况"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 scenario 的概念所指知识。scenario 意为'设想，可能发生的情况'。",
+                source: 9
+            },
+            {
+                question: "51. They see the region as their natural ______ of influence due to their historical links and a shared language.",
+                options: ["A) ability", "B) sphere", "C) power", "D) resource"],
+                translations: ["能力；才能", "范围；领域", "力量；权力", "资源；财力"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 sphere 的概念所指知识。sphere 意为'范围'。",
+                source: 9
+            },
+            {
+                question: "52. He doesn’t consider his team-members as ______, always consulting them, always seeking consensus, always doing his best for them in the decisions he makes.",
+                options: ["A) subordinates", "B) coworkers", "C) partners", "D) friends"],
+                translations: ["下属；下级", "同事；合作者", "伙伴；合伙人", "朋友"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 subordinate 的概念所指知识。根据上下文，只有 subordinate 意思合适。句意：他没有把组员当作下属……",
+                source: 9
+            },
+            {
+                question: "53. The local residents are collecting money to fund a/an ______ water supply in case the rain supply fails.",
+                options: ["A) environmental", "B) protective", "C) conservative", "D) supplementary"],
+                translations: ["环境的", "保护的；防护的", "保守的；保守主义的", "补充的；附加的"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 supplementary 的概念所指知识。supplementary 意为'补充的，追加的'，符合语义。",
+                source: 9
+            },
+            {
+                question: "54. He pleaded guilty of careless driving causing death in 2015 and was given a 12-month sentence ______ for 12 months.",
+                options: ["A) delayed", "B) postponed", "C) suspended", "D) prolonged"],
+                translations: ["延迟；推迟", "推迟；延期", "暂缓；中止", "延长；拖延"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 suspend 的语境制约知识。is suspended a sentence 意为'缓期执行刑期'。",
+                source: 9
+            },
+            {
+                question: "55. Apple Computer Inc. is teaming ______ with trading house Uchida Yoko Co., Ltd. to expand its business with Japanese schools.",
+                options: ["A) at", "B) up", "C) of", "D) in"],
+                translations: ["在……", "向上", "……的", "在……里面"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 team 的搭配模式知识。team up 意为'（与……）组队，（与……）协作'，是固定搭配。",
+                source: 9
+            },
+            {
+                question: "56. If employees had to move into ______ accommodation while trying to find new housing, they received a tax-free allowance towards the cost of this accommodation for a maximum period of 13 weeks.",
+                options: ["A) temporary", "B) momentary", "C) transient", "D) provisional"],
+                translations: ["临时的；暂时的", "瞬间的；短暂的", "转瞬即逝的；临时的", "临时的；暂定的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 temporary 的语义联想知识。temporary：意为'临时的，暂时的'，普通用词。",
+                source: 9
+            },
+            {
+                question: "57. The normal change from larva to adult is ______ by the larva ceasing production of juvenile hormone.",
+                options: ["A) managed", "B) involved", "C) triggered", "D) rejected"],
+                translations: ["管理；经营", "参与；涉及", "触发；引起", "拒绝；否决"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 trigger 的概念所指知识。trigger 意为'引起，促使'，符合语义。",
+                source: 9
+            },
+            {
+                question: "58. A flexible retirement age is being considered by Ministers to ______ men’s and women’s pension rights.",
+                options: ["A) restraint", "B) pursue", "C) generate", "D) unify"],
+                translations: ["限制；约束", "追求；从事", "产生；生成", "统一；使一致"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 unify 的概念所指知识。unify 意为'（使）统一'。",
+                source: 9
+            },
+            {
+                question: "59. The dolphin hunts are a violation ______ Chilean law, several international conventions, and customary international law.",
+                options: ["A) for", "B) of", "C) to", "D) in"],
+                translations: ["为了", "……的", "到", "在……里面"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 violation 的搭配模式知识。violation of 是固定搭配。",
+                source: 9
+            },
+            {
+                question: "60. He will have won because his ______ of future offered more hope to American voters than four more years of George Bush in charge.",
+                options: ["A) vision", "B) sight", "C) image", "D) delusion"],
+                translations: ["展望；愿景", "视力；景象", "形象；印象", "错觉；妄想"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 vision 的语义联想知识。vision of future 表示'对未来的展望'。",
+                source: 9
+            }
+        ];
+
+        // 题库数据 - 子表10（示例）
+        // 题库数据 - 子表10 (source:10)
+        const questionBank10 = [
+            {
+                question: "1. West Ham was an area adjacent ______ East London where formal politics during the 1920s came to be dominated by the Labour Party to an extent experienced in few other areas of the country.",
+                options: ["A) to", "B) in", "C) of", "D) as"],
+                translations: ["邻近；到", "在……里面", "……的", "作为；如同"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 adjacent 的搭配模式知识。adjacent to 是固定搭配，其他选项不合适。",
+                source: 10
+            },
+            {
+                question: "2. After being rejected by several academic journals, Charles’s new paper was indeed published, ______ in a somewhat abbreviated form.",
+                options: ["A) hence", "B) albeit", "C) therefore", "D) wherever"],
+                translations: ["因此；由此", "尽管；虽然", "所以；因此", "无论何处"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 albeit 的概念所指知识，即 albeit（尽管，即使）的意思。根据上下文，需要一个表示转折的连接词，只有 albeit 合适。",
+                source: 10
+            },
+            {
+                question: "3. In May 1984 a new national ______ was established, composed of 150 members elected from among the members of eight directly elected regional councils.",
+                options: ["A) collection", "B) rally", "C) gathering", "D) assembly"],
+                translations: ["收集；集合", "集会；抗议活动", "聚集；聚会", "议会；代表大会"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 assembly 的语义联想知识。national assembly 意为'国民大会'，是正式的政治组织。",
+                source: 10
+            },
+            {
+                question: "4. Order is absolutely essential for a factory because if its rules and regulations ______, production would get into a mess.",
+                options: ["A) executed", "B) implemented", "C) collapsed", "D) issued"],
+                translations: ["执行；实施", "实施；执行", "崩溃；瓦解", "发布；签发"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 collapse 的概念所指知识。与 order 相反的是 rules and regulations collapsed（崩溃，瓦解），其他选项不合适。",
+                source: 10
+            },
+            {
+                question: "5. The police are joining forces with ______ from the fire and ambulance services in the first 'Safer Seniors' campaign.",
+                options: ["A) friends", "B) prisoners", "C) colleges", "D) colleagues"],
+                translations: ["朋友", "囚犯", "学院；大学", "同事；同僚"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 colleague 的概念所指知识。colleague 意为'同事'。",
+                source: 10
+            },
+            {
+                question: "6. To provide better educational and medical services, councils need to ______ a register of all young people below 18 living in their areas.",
+                options: ["A) amass", "B) compile", "C) edit", "D) collect"],
+                translations: ["积累；积聚", "编制；编纂", "编辑；校订", "收集；收藏"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 compile 的概念所指知识。'编制（各地区18岁以下青年的名册）'应该用 compile。",
+                source: 10
+            },
+            {
+                question: "7. The scientific observer ______ of himself as a rational mind looking out through a plate-glass window on to an inaccessible 'nature'.",
+                options: ["A) conceives", "B) believes", "C) announces", "D) claims"],
+                translations: ["构想；认为", "相信；认为", "宣布；宣告", "声称；断言"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 conceive 的搭配模式知识。只有 conceive（想象）能与 of 搭配。",
+                source: 10
+            },
+            {
+                question: "8. The waste disposal industry is finding it difficult to ______ the public that its operations are safe.",
+                options: ["A) require", "B) urge", "C) convince", "D) affect"],
+                translations: ["要求；需要", "催促；力劝", "说服；使确信", "影响；感动"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 convince 的概念所指知识。convince 意为'说服，使确信'，符合语义。句意：废物处理行业发现很难让公众相信其操作是安全的。",
+                source: 10
+            },
+            {
+                question: "9. The deep weather ______ over the mid-Atlantic will gradually move eastwards during the day and the weather can be quite changeable.",
+                options: ["A) iceberg", "B) depression", "C) frost", "D) lightning"],
+                translations: ["冰山", "低气压；抑郁", "霜；霜冻", "闪电"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 depression 的概念所指知识。depression 意为'低气压'，符合语义。",
+                source: 10
+            },
+            {
+                question: "10. Since this article is the summary of previous and current research, readers may have ______ some of the data and arguments before.",
+                options: ["A) confronted", "B) faced", "C) encountered", "D) contacted"],
+                translations: ["面对；遭遇", "面对；面向", "遇到；遭遇", "联系；接触"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 encounter 的语义联想知识。encounter：通常指遇到困难或挫折，也指偶然或意外的相遇。",
+                source: 10
+            },
+            {
+                question: "11. However, it also exerted ______ pressure on the strikers, who were unaccustomed to such massive high-level attention to their affairs.",
+                options: ["A) immense", "B) vast", "C) massive", "D) enormous"],
+                translations: ["极大的；广大的", "广阔的；巨大的", "大量的；巨大的", "庞大的；极大的"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 enormous 的语义联想知识。enormous：指体积、数量或程度远远超过一般标准，此处指压力极大。",
+                source: 10
+            },
+            {
+                question: "12. We pray particularly for the ______ election, that the man of your choosing may be elected, and that the government of that nation may seek justice, peace and righteousness.",
+                options: ["A) forthcoming", "B) bygone", "C) registered", "D) dominant"],
+                translations: ["即将到来的", "过去的；以往的", "已登记的", "占优势的；支配的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 forthcoming 的概念所指知识。根据上下文，还未进行的选举才需要祈祷。forthcoming 意为'即将到来的'，符合题意。",
+                source: 10
+            },
+            {
+                question: "13. Just as happy people create their own inclination ______ further happiness, so trusting relationships create further trust.",
+                options: ["A) in", "B) for", "C) towards", "D) with"],
+                translations: ["在……里面", "为了", "朝向", "与……一起"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 inclination 的搭配模式知识。inclination towards 是固定搭配，表示'倾向'。",
+                source: 10
+            },
+            {
+                question: "14. Although data ______ will no doubt be safe for many years, there is no substitute for the real thing if you have to produce the document in a court of law 15 years from first filing it.",
+                options: ["A) sharing", "B) deletion", "C) reference", "D) integrity"],
+                translations: ["分享；共享", "删除；删除部分", "参考；参照", "完整性；正直"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 integrity 语境制约知识。data integrity 意为'数据完整性'，为专业词汇。",
+                source: 10
+            },
+            {
+                question: "15. Leisure reading (that not required by school) was a good indicator of the ______ level of interest in reading in a particular language.",
+                options: ["A) external", "B) intrinsic", "C) sufficient", "D) finite"],
+                translations: ["外部的；外来的", "内在的；本质的", "足够的；充分的", "有限的；限定的"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 intrinsic 的语境制约知识。根据上下文，课外看的书籍最能体现内在的兴趣（intrinsic interest）。",
+                source: 10
+            },
+            {
+                question: "16. When the government ______ emergency laws to postpone the strike for two months, the union refused to call it off, daring the government to end it by force.",
+                options: ["A) invoked", "B) prayed", "C) treated", "D) required"],
+                translations: ["援引；援用", "祈祷；祈求", "对待；治疗", "需要；要求"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 invoke 的概念所指知识。invoke 意为'援用，授引（法律）'。",
+                source: 10
+            },
+            {
+                question: "17. The poll-tax, a fixed annual ______ placed on all tax-paying males regardless of age, formed the basis of state revenue for over a century.",
+                options: ["A) salary", "B) allowance", "C) levy", "D) bonus"],
+                translations: ["薪水；工资", "津贴；补助", "税款；征税", "奖金；红利"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 levy 的概念所指知识。levy 意为'税款'，是上缴的金额；其他选项都是收入的部分。",
+                source: 10
+            },
+            {
+                question: "18. Public transportation is virtually inaccessible in this city; ______, its hospitals are also not very user-friendly.",
+                options: ["A) likewise", "B) although", "C) therefore", "D) hence"],
+                translations: ["同样地", "尽管；虽然", "因此；所以", "因此；由此"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 likewise 的概念所指知识。只有 likewise（同样地）适合上下文的语境。",
+                source: 10
+            },
+            {
+                question: "19. There are possible risks, but ______, we feel it's a sound investment.",
+                options: ["A) although", "B) nonetheless", "C) besides", "D) therefore"],
+                translations: ["尽管", "尽管如此；但是", "此外；而且", "因此；所以"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 nonetheless 的概念所指知识。只有 nonetheless（尽管如此）适合上下文的语境。",
+                source: 10
+            },
+            {
+                question: "20. ______ the relative wealth of information for historical research, this material has remained largely unexamined.",
+                options: ["A) Meanwhile", "B) In order to", "C) Anyway", "D) Notwithstanding"],
+                translations: ["同时", "为了", "无论如何", "尽管；虽然"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 notwithstanding 的概念所指知识。notwithstanding 意为'尽管，虽然'。",
+                source: 10
+            },
+            {
+                question: "21. The real-world data, such as price and the number purchased, seem to be ______ odds with the law of demand.",
+                options: ["A) to", "B) at", "C) in", "D) of"],
+                translations: ["到", "处于", "在……里面", "……的"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 odds 的搭配模式知识。at odds 意为'争执，不一致'，是固定搭配。句意：实际数据（如价格和购买的数量）和需求法则存在矛盾。",
+                source: 10
+            },
+            {
+                question: "22. Editing and updating will be an ______ process with new editions published every two to three years.",
+                options: ["A) ongoing", "B) impossible", "C) unproductive", "D) envious"],
+                translations: ["持续的；进行中的", "不可能的", "无成效的", "嫉妒的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 ongoing 的概念所指知识。只有 ongoing（不间断的）适合上下文的语境。",
+                source: 10
+            },
+            {
+                question: "23. The new equipment in the factory was extremely sophisticated and was monitored from a central control ______.",
+                options: ["A) layer", "B) slate", "C) union", "D) panel"],
+                translations: ["层；层次", "石板；候选人名单", "联盟；工会", "面板；控制板"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 panel 的搭配模式知识。control panel（控制面板）是固定搭配。",
+                source: 10
+            },
+            {
+                question: "24. A Richmond man who has been jailed more than 30 times since turning 18 was indicted March 1 as a first-degree ______ felony(重罪) offender.",
+                options: ["A) continuous", "B) successive", "C) persistent", "D) everlasting"],
+                translations: ["连续的；持续的", "连续的；继承的", "持续的；执着的", "永恒的；持久的"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 persistent 的语义联想知识。persistent：普通用词，指执著的，不屈不挠的，或指持续的，反复出现的，此处强调重复犯错。",
+                source: 10
+            },
+            {
+                question: "25. The first five types of transformations do not ______ any particular problems for identifying and isolating the object.",
+                options: ["A) block", "B) advocate", "C) require", "D) pose"],
+                translations: ["阻止；阻塞", "提倡；主张", "需要；要求", "造成；提出"],
+                answer: "D",
+                explanation: "试题分析：本题旨在考查学术词汇 pose 的概念所指知识。pose 意为'造成（威胁、问题等）'。",
+                source: 10
+            },
+            {
+                question: "26. The government is ______ to do anything which might spoil the harmonious relations between the country's ethnic groups.",
+                options: ["A) willing", "B) reluctant", "C) interested", "D) neutral"],
+                translations: ["愿意的；乐意的", "不情愿的；勉强的", "感兴趣的", "中立的"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 reluctant 的概念所指知识。根据上下文，reluctant（不情愿的）才合适。",
+                source: 10
+            },
+            {
+                question: "27. Too many ______ experts in business schools are drop-outs from industry who have never succeeded in making any profit in their life—hardly a qualification for teaching business success.",
+                options: ["A) so-called", "B) intelligent", "C) conventional", "D) unique"],
+                translations: ["所谓的；号称的", "聪明的；智能的", "传统的；惯例的", "独特的；唯一的"],
+                answer: "A",
+                explanation: "试题分析：本题旨在考查学术词汇 so-called 概念所指知识。根据上下文，这些专家并不具备充分的资格，所以是所谓的专家。",
+                source: 10
+            },
+            {
+                question: "28. The mathematical principles of determining where the rate of change is maximal are, for mathematicians, very obvious and ______.",
+                options: ["A) open", "B) blunt", "C) straightforward", "D) sincere"],
+                translations: ["开放的；公开的", "直率的；钝的", "简单的；直接的", "真诚的；真挚的"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 straightforward 的语义联想知识。straightforward：多用于答复、叙述等场合，指直截了当、不回避或故弄玄虚，此处指数学原理清楚直接。",
+                source: 10
+            },
+            {
+                question: "29. To prevent any possible accidents or terror attacks, all visitors must ______ body searches by security guards before getting into the football stadium.",
+                options: ["A) experience", "B) sustain", "C) undergo", "D) suffer"],
+                translations: ["经历；体验", "维持；承受", "经历；经受", "遭受；忍受"],
+                answer: "C",
+                explanation: "试题分析：本题旨在考查学术词汇 undergo 的语义联想知识。undergo：多指经受艰难、痛苦、不愉快或危险的事，此处指接受安检。",
+                source: 10
+            },
+            {
+                question: "30. The British government has introduced a new system ______ Britons choose their family doctors and the government pays those doctors.",
+                options: ["A) meanwhile", "B) whereby", "C) moreover", "D) however"],
+                translations: ["同时", "凭借；借以", "此外；而且", "然而；但是"],
+                answer: "B",
+                explanation: "试题分析：本题旨在考查学术词汇 whereby 的概念所指知识。whereby 意为'凭借，借以'。",
+                source: 10
+            }
+        ];
+
+        // 全局变量
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions')) || [];
+        let isSelectMode = false;
+        let selectedQuestionIndices = [];
+        let selectedSource = "all"; // 默认选择全部题库
+        let practiceMode = "random"; // 默认练习模式：随机抽题
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWrongQuestions();
+            updateWrongCount();
+            selectSource('all');
+        });
+
+        // 设置题目来源
+        function selectSource(source) {
+            selectedSource = source;
+            
+            // 更新UI
+            document.querySelectorAll('.source-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            if (source === 'all') {
+                document.querySelector('.source-btn[data-source="all"]').classList.add('selected');
+            } else {
+                document.querySelector(`.source-btn[data-source="${source}"]`).classList.add('selected');
+            }
+        }
+
+        // 设置练习模式
+        function selectMode(mode) {
+            practiceMode = mode;
+            
+            // 更新UI
+            document.querySelectorAll('.mode-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            document.querySelector(`.mode-option[data-mode="${mode}"]`).classList.add('selected');
+        }
+
+        // 设置题目数量
+        function setQuestionCount(count) {
+            document.getElementById('question-count').value = count;
+        }
+
+        // 开始练习
+        function startPractice() {
+            const questionCount = parseInt(document.getElementById('question-count').value);
+            if (questionCount < 1 || questionCount > 100) {
+                alert('请输入1-100之间的数字');
+                return;
+            }
+            
+            // 根据选择的题库获取题目
+            let selectedBank = [];
+            if (selectedSource === 'all') {
+                selectedBank = [...questionBank6, ...questionBank7, ...questionBank8, ...questionBank9, ...questionBank10];
+            } else if (selectedSource === '6') {
+                selectedBank = [...questionBank6];
+            } else if (selectedSource === '7') {
+                selectedBank = [...questionBank7];
+            } else if (selectedSource === '8') {
+                selectedBank = [...questionBank8];
+            } else if (selectedSource === '9') {
+                selectedBank = [...questionBank9];
+            } else if (selectedSource === '10') {
+                selectedBank = [...questionBank10];
+            }
+            
+            if (selectedBank.length === 0) {
+                alert('所选题库中没有题目');
+                return;
+            }
+            
+            // 根据练习模式生成题目
+            if (practiceMode === 'sequential') {
+                // 顺序模式：直接取前N道题
+                currentQuestions = selectedBank.slice(0, questionCount);
+            } else {
+                // 随机模式：随机选择题目
+                currentQuestions = getRandomQuestions(selectedBank, questionCount);
+            }
+            
+            currentQuestionIndex = 0;
+            userAnswers = new Array(currentQuestions.length).fill(null);
+            
+            // 显示练习页面
+            document.getElementById('home-page').classList.add('hidden');
+            document.getElementById('practice-page').classList.remove('hidden');
+            document.getElementById('question-nav-sidebar').classList.remove('hidden');
+            
+            // 初始化导航
+            initQuestionNav();
+            
+            // 显示第一题
+            showQuestion();
+        }
+
+        // 从错题本开始练习
+        function practiceWrongQuestions() {
+            if (wrongQuestions.length === 0) {
+                alert('错题本为空！');
+                return;
+            }
+            
+            currentQuestions = [...wrongQuestions];
+            currentQuestionIndex = 0;
+            userAnswers = new Array(currentQuestions.length).fill(null);
+            
+            // 显示练习页面
+            document.getElementById('wrong-questions-page').classList.add('hidden');
+            document.getElementById('practice-page').classList.remove('hidden');
+            document.getElementById('question-nav-sidebar').classList.remove('hidden');
+            
+            // 初始化导航
+            initQuestionNav();
+            
+            // 显示第一题
+            showQuestion();
+        }
+
+        // 获取随机题目
+        function getRandomQuestions(bank, count) {
+            const shuffled = [...bank].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        // 显示题目
+        function showQuestion() {
+            const question = currentQuestions[currentQuestionIndex];
+            const sourceTag = getSourceTag(question.source);
+            document.getElementById('question-text').innerHTML = `
+                ${sourceTag}
+                ${question.question}
+            `;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            // 隐藏解析
+            document.getElementById('explanation-container').classList.add('hidden');
+            
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.dataset.option = String.fromCharCode(65 + index); // A, B, C, D
+                
+                // 创建选项内容容器
+                const optionContent = document.createElement('div');
+                optionContent.className = 'option-content';
+                
+                // 添加选项文本
+                const optionText = document.createElement('div');
+                optionText.textContent = option;
+                optionContent.appendChild(optionText);
+                
+                // 如果用户已经回答了这个问题，显示正确/错误状态和中文释义
+                if (userAnswers[currentQuestionIndex] !== null) {
+                    const userAnswer = userAnswers[currentQuestionIndex];
+                    const correctAnswer = question.answer;
+                    
+                    if (optionElement.dataset.option === correctAnswer) {
+                        optionElement.classList.add('correct');
+                    }
+                    
+                    if (userAnswer !== correctAnswer && optionElement.dataset.option === userAnswer) {
+                        optionElement.classList.add('wrong');
+                    }
+                    
+                    // 添加中文释义
+                    const translation = document.createElement('div');
+                    translation.className = 'translation';
+                    translation.textContent = question.translations ? question.translations[index] : '';
+                    optionContent.appendChild(translation);
+                }
+                
+                optionElement.appendChild(optionContent);
+                
+                optionElement.addEventListener('click', function() {
+                    if (userAnswers[currentQuestionIndex] === null) {
+                        selectOption(this);
+                    }
+                });
+                
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            // 更新导航高亮
+            updateQuestionNav();
+            
+            // 更新进度条
+            updateProgressBar();
+        }
+        
+        // 获取题目来源标签
+        function getSourceTag(source) {
+            let tagClass = '';
+            let tagText = '';
+            
+            switch(source) {
+                case 6:
+                    tagClass = 'source6';
+                    tagText = '子表6';
+                    break;
+                case 7:
+                    tagClass = 'source7';
+                    tagText = '子表7';
+                    break;
+                case 8:
+                    tagClass = 'source8';
+                    tagText = '子表8';
+                    break;
+                case 9:
+                    tagClass = 'source9';
+                    tagText = '子表9';
+                    break;
+                case 10:
+                    tagClass = 'source10';
+                    tagText = '子表10';
+                    break;
+                default:
+                    tagClass = 'source6';
+                    tagText = '未知';
+            }
+            
+            return `<span class="source-tag ${tagClass}">${tagText}</span>`;
+        }
+
+        // 选择选项
+        function selectOption(optionElement) {
+            const selectedOption = optionElement.dataset.option;
+            const question = currentQuestions[currentQuestionIndex];
+            
+            userAnswers[currentQuestionIndex] = selectedOption;
+            
+            if (selectedOption === question.answer) {
+                optionElement.classList.add('correct');
+                
+                // 自动跳转到下一题
+                setTimeout(() => {
+                    if (currentQuestionIndex < currentQuestions.length - 1) {
+                        currentQuestionIndex++;
+                        showQuestion();
+                    } else {
+                        finishPractice();
+                    }
+                }, 800);
+            } else {
+                optionElement.classList.add('wrong');
+                
+                // 显示正确答案
+                const options = document.querySelectorAll('.option');
+                options.forEach(opt => {
+                    if (opt.dataset.option === question.answer) {
+                        opt.classList.add('correct');
+                    }
+                });
+                
+                // 为所有选项添加中文释义
+                options.forEach((opt, index) => {
+                    const optionContent = opt.querySelector('.option-content');
+                    // 检查是否已经有翻译
+                    if (!opt.querySelector('.translation')) {
+                        const translation = document.createElement('div');
+                        translation.className = 'translation';
+                        translation.textContent = question.translations ? question.translations[index] : '';
+                        optionContent.appendChild(translation);
+                    }
+                });
+                
+                // 显示题目解析
+                if (question.explanation) {
+                    const explanationContainer = document.getElementById('explanation-container');
+                    explanationContainer.innerHTML = `
+                        <div class="explanation-title">题目解析：</div>
+                        <div>${question.explanation}</div>
+                    `;
+                    explanationContainer.classList.remove('hidden');
+                }
+                
+                // 添加到错题本
+                addToWrongQuestions(question);
+            }
+            
+            // 更新导航状态
+            updateQuestionNav();
+        }
+
+        // 添加到错题本
+        function addToWrongQuestions(question) {
+            // 检查是否已经在错题本中
+            const alreadyExists = wrongQuestions.some(q => 
+                q.question === question.question && q.source === question.source
+            );
+            
+            if (!alreadyExists) {
+                wrongQuestions.push(question);
+                localStorage.setItem('wrongQuestions', JSON.stringify(wrongQuestions));
+                loadWrongQuestions(); // 更新错题本显示
+                updateWrongCount();
+            }
+        }
+
+        // 上一题
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                showQuestion();
+            }
+        }
+
+        // 下一题
+        function nextQuestion() {
+            if (currentQuestionIndex < currentQuestions.length - 1) {
+                currentQuestionIndex++;
+                showQuestion();
+            } else {
+                finishPractice();
+            }
+        }
+
+        // 完成练习
+        function finishPractice() {
+            document.getElementById('practice-page').classList.add('hidden');
+            document.getElementById('question-nav-sidebar').classList.add('hidden');
+            document.getElementById('practice-end-page').classList.remove('hidden');
+            
+            // 计算得分
+            const correctCount = userAnswers.reduce((count, answer, index) => {
+                return answer === currentQuestions[index].answer ? count + 1 : count;
+            }, 0);
+            
+            const score = Math.round((correctCount / currentQuestions.length) * 100);
+            document.getElementById('score-text').textContent = `你完成了 ${currentQuestions.length} 道题，答对了 ${correctCount} 道，得分 ${score} 分`;
+        }
+
+        // 再背一组
+        function startAnotherSet() {
+            document.getElementById('practice-end-page').classList.add('hidden');
+            startPractice();
+        }
+
+        // 返回主页
+        function returnToHome() {
+            document.getElementById('practice-page').classList.add('hidden');
+            document.getElementById('practice-end-page').classList.add('hidden');
+            document.getElementById('wrong-questions-page').classList.add('hidden');
+            document.getElementById('question-nav-sidebar').classList.add('hidden');
+            document.getElementById('home-page').classList.remove('hidden');
+        }
+
+        // 查看错题本
+        function viewWrongQuestions() {
+            document.getElementById('home-page').classList.add('hidden');
+            document.getElementById('practice-page').classList.add('hidden');
+            document.getElementById('practice-end-page').classList.add('hidden');
+            document.getElementById('wrong-questions-page').classList.remove('hidden');
+            loadWrongQuestions();
+            updateWrongCount();
+        }
+
+        // 更新错题数量显示
+        function updateWrongCount() {
+            document.getElementById('wrong-count').textContent = `当前错题数: ${wrongQuestions.length}`;
+        }
+
+        // 加载错题本
+        function loadWrongQuestions() {
+            const wrongQuestionsList = document.getElementById('wrong-questions-list');
+            wrongQuestionsList.innerHTML = '';
+            
+            if (wrongQuestions.length === 0) {
+                wrongQuestionsList.innerHTML = '<p>暂无错题</p>';
+                return;
+            }
+            
+            wrongQuestions.forEach((question, index) => {
+                const questionItem = document.createElement('div');
+                questionItem.className = 'wrong-question-item';
+                
+                const sourceTag = getSourceTag(question.source);
+                
+                if (isSelectMode) {
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `wrong-question-${index}`;
+                    checkbox.dataset.index = index;
+                    checkbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            selectedQuestionIndices.push(parseInt(this.dataset.index));
+                        } else {
+                            selectedQuestionIndices = selectedQuestionIndices.filter(i => i !== parseInt(this.dataset.index));
+                        }
+                    });
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = `wrong-question-${index}`;
+                    label.innerHTML = `${sourceTag} ${question.question}`;
+                    
+                    const checkboxContainer = document.createElement('div');
+                    checkboxContainer.className = 'checkbox-container';
+                    checkboxContainer.appendChild(checkbox);
+                    checkboxContainer.appendChild(label);
+                    
+                    questionItem.appendChild(checkboxContainer);
+                } else {
+                    questionItem.innerHTML = `${sourceTag} ${question.question}`;
+                }
+                
+                wrongQuestionsList.appendChild(questionItem);
+            });
+        }
+
+        // 切换选择模式
+        function toggleSelectMode() {
+            isSelectMode = !isSelectMode;
+            selectedQuestionIndices = [];
+            
+            const selectButton = document.getElementById('select-wrong-questions');
+            const deleteButton = document.getElementById('delete-selected');
+            
+            if (isSelectMode) {
+                selectButton.textContent = '取消选择';
+                deleteButton.classList.remove('hidden');
+            } else {
+                selectButton.textContent = '选择';
+                deleteButton.classList.add('hidden');
+            }
+            
+            loadWrongQuestions();
+        }
+
+        // 删除选中的错题
+        function deleteSelectedWrongQuestions() {
+            if (selectedQuestionIndices.length === 0) {
+                alert('请先选择要删除的错题');
+                return;
+            }
+            
+            // 从大到小排序，以便从后往前删除
+            selectedQuestionIndices.sort((a, b) => b - a);
+            
+            selectedQuestionIndices.forEach(index => {
+                wrongQuestions.splice(index, 1);
+            });
+            
+            localStorage.setItem('wrongQuestions', JSON.stringify(wrongQuestions));
+            selectedQuestionIndices = [];
+            toggleSelectMode();
+            loadWrongQuestions();
+            updateWrongCount();
+        }
+
+        // 清空错题本
+        function clearWrongQuestions() {
+            if (confirm('确定要清空所有错题吗？')) {
+                wrongQuestions = [];
+                localStorage.setItem('wrongQuestions', JSON.stringify(wrongQuestions));
+                loadWrongQuestions();
+                updateWrongCount();
+            }
+        }
+
+        // 初始化题目导航
+        function initQuestionNav() {
+            const questionNumbers = document.getElementById('question-numbers');
+            questionNumbers.innerHTML = '';
+            
+            for (let i = 0; i < currentQuestions.length; i++) {
+                const numberElement = document.createElement('div');
+                numberElement.className = 'question-number';
+                numberElement.textContent = i + 1;
+                numberElement.dataset.index = i;
+                
+                // 添加题目来源颜色指示
+                const source = currentQuestions[i].source;
+                if (source === 6) {
+                    numberElement.style.border = '2px solid var(--source6-color)';
+                } else if (source === 7) {
+                    numberElement.style.border = '2px solid var(--source7-color)';
+                } else if (source === 8) {
+                    numberElement.style.border = '2px solid var(--source8-color)';
+                } else if (source === 9) {
+                    numberElement.style.border = '2px solid var(--source9-color)';
+                } else if (source === 10) {
+                    numberElement.style.border = '2px solid var(--source10-color)';
+                }
+                
+                numberElement.addEventListener('click', function() {
+                    currentQuestionIndex = parseInt(this.dataset.index);
+                    showQuestion();
+                });
+                
+                questionNumbers.appendChild(numberElement);
+            }
+            
+            updateQuestionNav();
+        }
+
+        // 更新题目导航
+        function updateQuestionNav() {
+            const questionNumbers = document.querySelectorAll('.question-number');
+            let answeredCount = 0;
+            let correctCount = 0;
+            let wrongCount = 0;
+            
+            questionNumbers.forEach((number, index) => {
+                number.classList.remove('current-question', 'answered', 'wrong-answered');
+                
+                if (index === currentQuestionIndex) {
+                    number.classList.add('current-question');
+                }
+                
+                if (userAnswers[index] !== null) {
+                    answeredCount++;
+                    
+                    if (userAnswers[index] === currentQuestions[index].answer) {
+                        number.classList.add('answered');
+                        correctCount++;
+                    } else {
+                        number.classList.add('wrong-answered');
+                        wrongCount++;
+                    }
+                }
+            });
+            
+            // 更新统计信息
+            document.getElementById('answered-count').textContent = answeredCount;
+            document.getElementById('correct-count').textContent = correctCount;
+            document.getElementById('wrong-count').textContent = wrongCount;
+        }
+
+        // 更新进度条
+        function updateProgressBar() {
+            const progress = (currentQuestionIndex + 1) / currentQuestions.length * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
+        // 键盘控制
+        document.addEventListener('keydown', function(event) {
+            // 只在练习页面生效
+            if (!document.getElementById('practice-page').classList.contains('hidden')) {
+                // 左右箭头切换题目
+                if (event.key === 'ArrowLeft') {
+                    prevQuestion();
+                } else if (event.key === 'ArrowRight') {
+                    nextQuestion();
+                }
+                
+                // A/B/C/D选择答案
+                if (userAnswers[currentQuestionIndex] === null) {
+                    const key = event.key.toUpperCase();
+                    if (['A', 'B', 'C', 'D'].includes(key)) {
+                        const optionIndex = key.charCodeAt(0) - 65;
+                        const options = document.querySelectorAll('.option');
+                        if (optionIndex >= 0 && optionIndex < options.length) {
+                            selectOption(options[optionIndex]);
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
